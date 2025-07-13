@@ -1,0 +1,12 @@
+.register-link {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.95rem;
+  
+    a {
+      color: var(--ion-color-primary);
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+  }
