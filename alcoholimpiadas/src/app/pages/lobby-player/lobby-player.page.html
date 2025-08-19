@@ -1,0 +1,90 @@
+<ion-content [fullscreen]="true">
+  <!-- Botón de atrás -->
+  <div class="back-button-container">
+    <ion-button fill="clear" color="dark" (click)="goBack()" class="back-button">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+    </ion-button>
+  </div>
+
+  <div class="lobby-container" *ngIf="!isLoading">
+    <div class="header">
+      <h1 class="title">{{ room?.name }}</h1>
+      <p class="subtitle">Esperando que {{ getHost()?.player_name }} inicie el juego</p>
+      <div class="room-info">
+        <ion-badge color="primary">
+          <ion-icon name="people"></ion-icon>
+          {{ players.length }}/{{ room?.max_players }}
+        </ion-badge>
+        <ion-badge color="secondary">
+          <ion-icon name="trophy"></ion-icon>
+          {{ room?.num_teams }} equipos
+        </ion-badge>
+      </div>
+    </div>
+
+    <!-- Información del jugador actual -->
+    <div class="current-player-info" *ngIf="currentPlayer">
+      <h3>Tu información:</h3>
+      <div class="player-card current" [style.border-left-color]="currentPlayer.team_color">
+        <div class="player-info">
+          <h4 class="player-name">{{ currentPlayer.player_name }}</h4>
+          <p class="team-info">Equipo {{ currentPlayer.team_number }}</p>
+        </div>
+        <div 
+          class="color-indicator" 
+          [style.background-color]="currentPlayer.team_color">
+        </div>
+      </div>
+    </div>
+
+    <div class="teams-container">
+      <div class="team-section" *ngFor="let teamNum of getTeamNumbers()">
+        <h3 class="team-title">Equipo {{ teamNum }}</h3>
+        <div class="team-players">
+          <div 
+            class="player-card" 
+            *ngFor="let player of getTeamPlayers(teamNum)"
+            [style.border-left-color]="player.team_color"
+            [class.current-player]="player.user_id === currentPlayer?.user_id">
+            <div class="player-info">
+              <h4 class="player-name">{{ player.player_name }}</h4>
+              <ion-badge 
+                [color]="player.role === 'host' ? 'warning' : 'medium'"
+                class="role-badge">
+                {{ player.role === 'host' ? 'Anfitrión' : 'Jugador' }}
+              </ion-badge>
+            </div>
+            <div 
+              class="color-indicator" 
+              [style.background-color]="player.team_color">
+            </div>
+          </div>
+          
+          <!-- Slots vacíos -->
+          <div 
+            class="empty-slot" 
+            *ngFor="let i of [].constructor(Math.max(0, Math.ceil((room?.max_players || 0) / (room?.num_teams || 1)) - getTeamPlayers(teamNum).length))">
+            <p>Esperando jugador...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <ion-button 
+        expand="block" 
+        fill="outline"
+        color="danger"
+        (click)="leaveRoom()"
+        class="leave-button">
+        <ion-icon name="exit-outline" slot="start"></ion-icon>
+        SALIR DE LA SALA
+      </ion-button>
+    </div>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando sala...</p>
+  </div>
+</ion-content>

@@ -11,10 +11,6 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then(m => m.LoginPage)
   },
   {
-    path: 'tabs',
-    loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
-  },
-  {
     path: 'admin-panel',
     loadComponent: () => import('./pages/admin-panel/admin-panel.page').then( m => m.AdminPanelPage)
   },
@@ -24,6 +20,22 @@ export const routes: Routes = [
   },
   {
     path: 'register',
-    loadComponent: () => import('./pages/register/register.page').then( m => m.RegisterPage)
+    loadComponent: () => import('./pages/register/register.page').then(m => m.RegisterPage)
   },
+  {
+    path: 'create-room',
+    loadComponent: () => import('./pages/create-room/create-room.page').then(m => m.CreateRoomPage)
+  },
+  {
+    path: 'join-room',
+    loadComponent: () => import('./pages/join-room/join-room.page').then(m => m.JoinRoomPage)
+  },
+  {
+    path: 'lobby-host/:roomId',
+    loadComponent: () => import('./pages/lobby-host/lobby-host.page').then(m => m.LobbyHostPage)
+  },
+  {
+    path: 'lobby-player/:roomId',
+    loadComponent: () => import('./pages/lobby-player/lobby-player.page').then(m => m.LobbyPlayerPage)
+  }
 ];

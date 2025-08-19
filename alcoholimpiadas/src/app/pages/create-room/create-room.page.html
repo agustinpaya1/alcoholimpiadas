@@ -1,0 +1,67 @@
+<ion-content [fullscreen]="true">
+  <!-- Botón de atrás en la esquina superior izquierda -->
+  <div class="back-button-container">
+    <ion-button fill="clear" color="dark" (click)="goBack()" class="back-button">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+    </ion-button>
+  </div>
+
+  <div class="create-room-container">
+    <div class="form-container">
+      <h1 class="title">CREAR NUEVA SALA</h1>
+      
+      <form (ngSubmit)="onSubmit()" #roomForm="ngForm">
+        <ion-item class="form-item">
+          <ion-label position="stacked">Nombre de la Sala</ion-label>
+          <ion-input 
+            [(ngModel)]="roomData.name" 
+            name="roomName"
+            placeholder="Ej: Sala de Agustín"
+            required>
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label position="stacked">Número de Jugadores</ion-label>
+          <ion-select 
+            [(ngModel)]="roomData.max_players" 
+            name="maxPlayers"
+            interface="popover"
+            required>
+            <ion-select-option [value]="2">2 Jugadores</ion-select-option>
+            <ion-select-option [value]="3">3 Jugadores</ion-select-option>
+            <ion-select-option [value]="4">4 Jugadores</ion-select-option>
+            <ion-select-option [value]="5">5 Jugadores</ion-select-option>
+            <ion-select-option [value]="6">6 Jugadores</ion-select-option>
+            <ion-select-option [value]="7">7 Jugadores</ion-select-option>
+            <ion-select-option [value]="8">8 Jugadores</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label position="stacked">Número de Equipos</ion-label>
+          <ion-select 
+            [(ngModel)]="roomData.num_teams" 
+            name="numTeams"
+            interface="popover"
+            required>
+            <ion-select-option [value]="1">1 Equipo (Individual)</ion-select-option>
+            <ion-select-option [value]="2">2 Equipos</ion-select-option>
+            <ion-select-option [value]="3">3 Equipos</ion-select-option>
+            <ion-select-option [value]="4">4 Equipos</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <div class="button-container">
+          <ion-button 
+            type="submit" 
+            expand="block" 
+            class="create-button"
+            [disabled]="!roomForm.form.valid || isCreating">
+            {{ isCreating ? 'CREANDO...' : 'CREAR SALA' }}
+          </ion-button>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>

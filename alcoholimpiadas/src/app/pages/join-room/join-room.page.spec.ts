@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { GamePage } from './game.page';
+import { JoinRoomPage } from './join-room.page';
 
-describe('GamePage', () => {
-  let component: GamePage;
-  let fixture: ComponentFixture<GamePage>;
+describe('JoinRoomPage', () => {
+  let component: JoinRoomPage;
+  let fixture: ComponentFixture<JoinRoomPage>;
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(GamePage);
+    fixture = TestBed.createComponent(JoinRoomPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

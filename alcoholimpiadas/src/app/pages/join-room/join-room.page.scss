@@ -1,0 +1,130 @@
+.join-room-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  width: 100%;
+}
+
+.content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.title {
+  color: #fff;
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.search-container {
+  margin-bottom: 20px;
+}
+
+.search-item {
+  --background: rgba(255, 255, 255, 0.15);
+  --border-radius: 25px;
+  --padding-start: 15px;
+  --padding-end: 15px;
+}
+
+.search-item ion-input {
+  --color: #fff;
+  --placeholder-color: rgba(255, 255, 255, 0.7);
+}
+
+.rooms-container {
+  margin-bottom: 20px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #fff;
+}
+
+.loading-container ion-spinner {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 15px;
+}
+
+.no-rooms-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.no-rooms-container ion-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.rooms-list {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.room-item {
+  --background: transparent;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --inner-padding-end: 0;
+  cursor: pointer;
+}
+
+.room-info {
+  flex: 1;
+}
+
+.room-name {
+  color: #fff;
+  font-weight: 600;
+  margin: 0 0 5px 0;
+}
+
+.room-details {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  margin: 0 0 5px 0;
+}
+
+.room-status {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.room-status.waiting {
+  color: #4ecdc4;
+}
+
+.refresh-button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.refresh-button-container ion-button {
+  --color: rgba(255, 255, 255, 0.8);
+  --background-hover: rgba(255, 255, 255, 0.1);
+  text-transform: none;
+}
+
+ion-back-button {
+  --color: #fff;
+}

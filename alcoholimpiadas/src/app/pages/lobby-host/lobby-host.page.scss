@@ -1,0 +1,194 @@
+.back-button-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.back-button {
+  --color: #000;
+  --background: rgba(255, 255, 255, 0.9);
+  --border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.lobby-container {
+  padding: 80px 20px 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+  
+  .title {
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    margin-bottom: 15px;
+  }
+  
+  .room-info {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    
+    ion-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 12px;
+    }
+  }
+}
+
+.current-player-info {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  
+  h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+  }
+}
+
+.teams-container {
+  margin-bottom: 30px;
+}
+
+.team-section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  
+  .team-title {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+}
+
+.team-players {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #ccc;
+  
+  &.current {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  &.current-player {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .player-info {
+    flex: 1;
+    
+    .player-name {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    
+    .team-info {
+      font-size: 0.9rem;
+      color: #666;
+      margin: 0;
+    }
+    
+    .role-badge {
+      font-size: 0.8rem;
+    }
+  }
+  
+  .color-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.empty-slot {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  
+  p {
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+.actions {
+  text-align: center;
+  
+  .start-button {
+    --background: #28a745;
+    --color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .leave-button {
+    --color: #dc3545;
+    --border-color: #dc3545;
+    font-weight: bold;
+  }
+  
+  .start-info {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  ion-spinner {
+    --color: white;
+    margin-bottom: 20px;
+  }
+  
+  p {
+    color: white;
+    font-size: 1.1rem;
+  }
+}

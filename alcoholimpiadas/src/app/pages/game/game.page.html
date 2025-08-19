@@ -1,13 +1,31 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>game</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">game</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  
+  
+  <div class="menu-container">
+    <div class="bg-animation">
+      <div class="floating-element" *ngFor="let element of floatingElements" 
+          [style.left.px]="element.x" 
+          [style.top.px]="element.y"
+          [style.animation-delay.s]="element.delay">
+      </div>
+    </div>
+
+    <div class="content">
+      <h1 class="title">ALCOHOLIMPIADAS</h1>
+      
+      <div class="button-container">
+        <button 
+          class="option-button create-room"
+          (click)="onCreateRoom()">
+          CREAR SALA
+        </button>
+        
+        <button 
+          class="option-button join-room"
+          (click)="onJoinRoom()">
+          UNIR SALA
+        </button>
+      </div>
+    </div>
+  </div>
 </ion-content>

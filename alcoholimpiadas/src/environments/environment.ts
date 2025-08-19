@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   supabaseUrl: 'https://cuuqamxdflndjrbhtmsz.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1dXFhbXhkZmxuZGpyYmh0bXN6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjIyOTcxMiwiZXhwIjoyMDY3ODA1NzEyfQ.y5hmFry38ATsYEQOfgSD0ITdGBOhJ8KBD4YtLl6xKDk' // anon public
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1dXFhbXhkZmxuZGpyYmh0bXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMjk3MTIsImV4cCI6MjA2NzgwNTcxMn0.JZdAXgb2bnQmlHn80swirGbAOOLS2JJxBRzH1fxzB1g' // Usa la clave anon, no service_role
 };
 
 /*
