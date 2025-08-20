@@ -350,14 +350,24 @@ async joinRoom(roomId: string, playerName: string): Promise<{ room: Room, player
     return { room, player: existingPlayer };
   }
 
+  // En el método joinRoom, alrededor de la línea 353:
   // Contar jugadores actuales
-  const { count } = await this.supabase
+  const { count, error: countError } = await this.supabase
     .from('room_players')
     .select('*', { count: 'exact' })
     .eq('room_id', roomId);
-
-  if (count && count >= room.max_players) {
-    throw new Error('La sala está llena');
+  
+  console.log(`DEBUG - Sala ${roomId}:`);
+  console.log(`- Jugadores actuales: ${count}`);
+  console.log(`- Máximo permitido: ${room.max_players}`);
+  console.log(`- Room data:`, room);
+  
+  if (countError) {
+    console.error('Error al contar jugadores:', countError);
+  }
+  
+  if (count !== null && count >= room.max_players) {
+    throw new Error(`La sala está llena (${count}/${room.max_players})`);
   }
 
   // Determinar el rol del jugador

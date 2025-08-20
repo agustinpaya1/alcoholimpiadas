@@ -29,8 +29,8 @@ import { arrowBack } from 'ionicons/icons';
 export class CreateRoomPage {
   room: NewRoom = {
     name: '',
-    max_players: 50,
-    num_teams: 2,
+    max_players: 8,   // Valor por defecto razonable
+    num_teams: 2,     // Valor por defecto para equipos
     status: 'waiting'
   };
 

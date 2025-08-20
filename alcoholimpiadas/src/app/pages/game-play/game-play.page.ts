@@ -4,12 +4,12 @@ import { IonContent, IonButton, IonIcon, IonBadge, IonSpinner } from '@ionic/ang
 import { CommonModule } from '@angular/common';
 import { SupabaseService, Room, RoomPlayer } from '../../services/supabase.service';
 import { addIcons } from 'ionicons';
-import { arrowBack, play, people, trophy } from 'ionicons/icons';
+import { arrowBack, trophy, people } from 'ionicons/icons';
 
 @Component({
-  selector: 'app-lobby-host',
-  templateUrl: './lobby-host.page.html',
-  styleUrls: ['./lobby-host.page.scss'],
+  selector: 'app-game-play',
+  templateUrl: './game-play.page.html',
+  styleUrls: ['./game-play.page.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -20,28 +20,25 @@ import { arrowBack, play, people, trophy } from 'ionicons/icons';
     IonSpinner
   ]
 })
-export class LobbyHostPage implements OnInit, OnDestroy {
+export class GamePlayPage implements OnInit, OnDestroy {
   room: Room | null = null;
   players: RoomPlayer[] = [];
   isLoading = true;
-  isStarting = false;
+  currentRound = 1;
   private subscription: any;
-  
-  // Agregar Math para usar en el template
-  Math = Math;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private supabaseService: SupabaseService
   ) {
-    addIcons({ arrowBack, play, people, trophy });
+    addIcons({ arrowBack, trophy, people });
   }
 
   ngOnInit() {
     const roomId = this.route.snapshot.paramMap.get('roomId');
     if (roomId) {
-      this.loadRoomData(roomId);
+      this.loadGameData(roomId);
       this.subscribeToPlayers(roomId);
     }
   }
@@ -52,9 +49,8 @@ export class LobbyHostPage implements OnInit, OnDestroy {
     }
   }
 
-  async loadRoomData(roomId: string) {
+  async loadGameData(roomId: string) {
     try {
-      // Cargar datos de la sala SIEMPRE, independientemente de los jugadores
       const { data: roomData, error: roomError } = await this.supabaseService.client
         .from('rooms')
         .select('*')
@@ -66,16 +62,12 @@ export class LobbyHostPage implements OnInit, OnDestroy {
       }
     
       this.room = roomData;
-      console.log('Datos de la sala cargados:', this.room);
-    
-      // Cargar jugadores
       const players = await this.supabaseService.getRoomPlayers(roomId);
       this.players = players;
-      console.log('Jugadores cargados:', this.players);
       
     } catch (error) {
-      console.error('Error al cargar datos de la sala:', error);
-      alert('Error al cargar la sala');
+      console.error('Error al cargar datos del juego:', error);
+      alert('Error al cargar el juego');
       this.router.navigate(['/game']);
     } finally {
       this.isLoading = false;
@@ -87,7 +79,6 @@ export class LobbyHostPage implements OnInit, OnDestroy {
       roomId,
       (players) => {
         this.players = players;
-        console.log('Jugadores actualizados:', players);
       }
     );
   }
@@ -101,35 +92,12 @@ export class LobbyHostPage implements OnInit, OnDestroy {
     return Array.from({ length: this.room.num_teams }, (_, i) => i + 1);
   }
 
-  canStartGame(): boolean {
-    if (!this.room) {
-      console.log('No se puede iniciar: room es null');
-      return false;
-    }
-    
-    const canStart = this.players.length >= 1 && this.players.length <= this.room.max_players;
-    console.log(`CanStartGame: ${this.players.length} jugadores, máximo ${this.room.max_players}, resultado: ${canStart}`);
-    return canStart;
-  }
-
-  async startGame() {
-    if (!this.room || !this.canStartGame()) return;
-
-    this.isStarting = true;
-    try {
-      await this.supabaseService.startGame(this.room.id);
-      alert('¡Juego iniciado!');
-      // Aquí redirigirías a la página del juego
-      this.router.navigate(['/game-play', this.room.id]);
-    } catch (error) {
-      console.error('Error al iniciar juego:', error);
-      alert('Error al iniciar el juego');
-    } finally {
-      this.isStarting = false;
-    }
+  endGame() {
+    // Lógica para terminar el juego
+    this.router.navigate(['/game']);
   }
 
   goBack() {
-    this.router.navigate(['/game']);
+    this.router.navigate(['/lobby-host', this.room?.id]);
   }
 }

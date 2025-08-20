@@ -24,22 +24,30 @@
         <ion-item class="form-item">
           <ion-label position="stacked">Número de Equipos</ion-label>
           <ion-select 
-            [(ngModel)]="room.max_players" 
-            name="maxPlayers" 
-            placeholder="Selecciona número de jugadores">
-            <!-- opciones de 2 a 50 -->
+            [(ngModel)]="room.num_teams" 
+            name="numTeams" 
+            placeholder="Selecciona número de equipos"
+            required>
+            <ion-select-option [value]="2">2 equipos</ion-select-option>
+            <ion-select-option [value]="4">4 equipos</ion-select-option>
+            <ion-select-option [value]="8">8 equipos</ion-select-option>
+            <ion-select-option [value]="16">16 equipos</ion-select-option>
           </ion-select>
         </ion-item>
 
         <ion-item class="form-item">
           <ion-label position="stacked">Máximo de jugadores</ion-label>
-          <ion-select [(ngModel)]="room.num_teams" name="numTeams" placeholder="Selecciona" required>
+          <ion-select 
+            [(ngModel)]="room.max_players" 
+            name="maxPlayers" 
+            placeholder="Selecciona número de jugadores"
+            required>
+            <ion-select-option [value]="4">4 jugadores</ion-select-option>
+            <ion-select-option [value]="6">6 jugadores</ion-select-option>
             <ion-select-option [value]="8">8 jugadores</ion-select-option>
+            <ion-select-option [value]="12">12 jugadores</ion-select-option>
             <ion-select-option [value]="16">16 jugadores</ion-select-option>
-            <ion-select-option [value]="24">24 jugadores</ion-select-option>
-            <ion-select-option [value]="32">32 jugadores</ion-select-option>
-            <ion-select-option [value]="40">40 jugadores</ion-select-option>
-            <ion-select-option [value]="50">50 jugadores</ion-select-option>
+            <ion-select-option [value]="20">20 jugadores</ion-select-option>
           </ion-select>
         </ion-item>
 

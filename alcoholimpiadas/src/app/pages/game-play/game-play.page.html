@@ -6,18 +6,18 @@
     </ion-button>
   </div>
 
-  <div class="lobby-container" *ngIf="!isLoading">
+  <div class="game-container" *ngIf="!isLoading">
     <div class="header">
       <h1 class="title">{{ room?.name }}</h1>
-      <p class="subtitle">Eres el anfitrión - Esperando jugadores</p>
-      <div class="room-info">
+      <p class="subtitle">¡Juego en curso!</p>
+      <div class="game-info">
         <ion-badge color="primary">
           <ion-icon name="people"></ion-icon>
-          {{ players.length }}/{{ room?.max_players }}
+          {{ players.length }} jugadores
         </ion-badge>
         <ion-badge color="secondary">
           <ion-icon name="trophy"></ion-icon>
-          {{ room?.num_teams }} equipos
+          Ronda {{ currentRound }}
         </ion-badge>
       </div>
     </div>
@@ -27,7 +27,7 @@
         <h3 class="team-title">Equipo {{ teamNum }}</h3>
         <div class="team-players">
           <div 
-            class="player-card" 
+            class="player-card active" 
             *ngFor="let player of getTeamPlayers(teamNum)"
             [style.border-left-color]="player.team_color">
             <div class="player-info">
@@ -43,37 +43,31 @@
               [style.background-color]="player.team_color">
             </div>
           </div>
-          
-          <!-- Slots vacíos -->
-          <div 
-            class="empty-slot" 
-            *ngFor="let i of [].constructor(Math.max(0, Math.ceil((room?.max_players || 0) / (room?.num_teams || 1)) - getTeamPlayers(teamNum).length))">
-            <p>Esperando jugador...</p>
-          </div>
         </div>
+      </div>
+    </div>
+
+    <div class="game-content">
+      <div class="current-challenge">
+        <h2>¡Bienvenidos al juego!</h2>
+        <p>El juego ha comenzado. Aquí se mostrarán las pruebas y desafíos.</p>
+        <p>Esta es la base para implementar la lógica del juego real.</p>
       </div>
     </div>
 
     <div class="actions">
       <ion-button 
         expand="block" 
-        [disabled]="!canStartGame() || isStarting"
-        (click)="startGame()"
-        class="start-button">
-        <ion-icon name="play" slot="start"></ion-icon>
-        {{ isStarting ? 'INICIANDO...' : 'INICIAR JUEGO' }}
+        color="danger"
+        (click)="endGame()"
+        class="end-button">
+        TERMINAR JUEGO
       </ion-button>
-      
-      <p class="start-info" *ngIf="!canStartGame()">
-        <span *ngIf="!room">Cargando información de la sala...</span>
-        <span *ngIf="room && players.length < 1">Necesitas al menos 1 jugador para empezar</span>
-        <span *ngIf="room && players.length >= room.max_players">Sala llena ({{ players.length }}/{{ room.max_players }})</span>
-      </p>
     </div>
   </div>
 
   <div class="loading-container" *ngIf="isLoading">
     <ion-spinner name="crescent"></ion-spinner>
-    <p>Cargando sala...</p>
+    <p>Cargando juego...</p>
   </div>
 </ion-content>
