@@ -56,9 +56,12 @@ export class AuthService {
       .from('users')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle(); // Usar maybeSingle() en lugar de single()
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error al obtener perfil:', error);
+      return null; // Retornar null en lugar de lanzar error
+    }
     return data;
   }
 }

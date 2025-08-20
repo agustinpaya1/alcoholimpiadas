@@ -80,15 +80,19 @@ export class JoinRoomPage implements OnInit {
       alert('Necesitas introducir un nombre');
       return;
     }
-
+  
     try {
       const { room, player } = await this.supabaseService.joinRoom(roomId, playerName.trim());
       console.log('Uniéndose a la sala:', room);
       
       alert(`Te has unido a la sala "${room.name}"`);
       
-      // Redirigir al lobby del jugador
-      this.router.navigate(['/lobby-player', roomId]);
+      // Redirigir según el rol del jugador
+      if (player.role === 'host') {
+        this.router.navigate(['/lobby-host', roomId]);
+      } else {
+        this.router.navigate(['/lobby-player', roomId]);
+      }
     } catch (error: any) {
       console.error('Error al unirse a la sala:', error);
       alert(error.message || 'Error al unirse a la sala. Por favor, inténtalo de nuevo.');

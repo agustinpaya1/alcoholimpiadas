@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { IonContent, IonButton, IonIcon, IonList, IonItem, IonLabel, IonBadge, IonSpinner } from '@ionic/angular/standalone';
+import { IonContent, IonButton, IonIcon, IonBadge, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { SupabaseService, Room, RoomPlayer } from '../../services/supabase.service';
 import { addIcons } from 'ionicons';
@@ -16,9 +16,6 @@ import { arrowBack, play, people, trophy } from 'ionicons/icons';
     IonContent,
     IonButton,
     IonIcon,
-    IonList,
-    IonItem,
-    IonLabel,
     IonBadge,
     IonSpinner
   ]
@@ -83,6 +80,7 @@ export class LobbyHostPage implements OnInit, OnDestroy {
       roomId,
       (players) => {
         this.players = players;
+        console.log('Jugadores actualizados:', players);
       }
     );
   }

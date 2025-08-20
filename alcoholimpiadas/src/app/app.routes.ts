@@ -37,5 +37,9 @@ export const routes: Routes = [
   {
     path: 'lobby-player/:roomId',
     loadComponent: () => import('./pages/lobby-player/lobby-player.page').then(m => m.LobbyPlayerPage)
+  },
+  {
+    path: 'pruebas',
+    loadComponent: () => import('./pages/pruebas/pruebas.page').then(m => m.PruebasPage)
   }
 ];

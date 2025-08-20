@@ -1,0 +1,42 @@
+<ion-content [fullscreen]="true" class="pruebas-content">
+  <!-- Header -->
+  <div class="header">
+    <ion-button 
+      fill="clear" 
+      class="back-button"
+      (click)="goBack()">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+    </ion-button>
+    <h1 class="page-title">Selecciona una Prueba</h1>
+  </div>
+
+  <!-- Pruebas Grid -->
+  <div class="pruebas-container">
+    <div 
+      class="prueba-card"
+      *ngFor="let prueba of pruebas"
+      [style.background]="'linear-gradient(135deg, ' + prueba.color + ', ' + prueba.color + '88)'"
+      (click)="onPruebaSelected(prueba)">
+      
+      <div class="prueba-content">
+        <div class="prueba-icon">
+          <ion-icon [name]="prueba.icono"></ion-icon>
+        </div>
+        <h3 class="prueba-nombre">{{ prueba.nombre }}</h3>
+        <p class="prueba-descripcion">{{ prueba.descripcion }}</p>
+      </div>
+      
+      <div class="prueba-overlay"></div>
+    </div>
+  </div>
+
+  <!-- Floating elements for background animation -->
+  <div class="floating-elements">
+    <div class="floating-element" 
+         *ngFor="let element of [1,2,3,4,5]"
+         [style.left.%]="(element * 15) % 100"
+         [style.animation-delay.s]="element * 0.5">
+      🍺
+    </div>
+  </div>
+</ion-content>

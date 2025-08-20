@@ -2,64 +2,65 @@
   position: absolute;
   top: 20px;
   left: 20px;
-  z-index: 10;
+  z-index: 1000;
 }
 
 .back-button {
+  --color: #000;
+  --background: rgba(255, 255, 255, 0.9);
   --border-radius: 50%;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
 }
 
 .lobby-container {
   padding: 80px 20px 20px;
-  max-width: 600px;
-  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .header {
   text-align: center;
   margin-bottom: 30px;
-}
-
-.title {
-  font-size: 28px;
-  font-weight: bold;
-  margin: 0 0 10px 0;
-  color: var(--ion-color-primary);
-}
-
-.subtitle {
-  font-size: 16px;
-  color: var(--ion-color-medium);
-  margin: 0 0 20px 0;
-}
-
-.room-info {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.room-info ion-badge {
-  padding: 8px 12px;
-  font-size: 14px;
+  
+  .title {
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    margin-bottom: 15px;
+  }
+  
+  .room-info {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    
+    ion-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 12px;
+    }
+  }
 }
 
 .current-player-info {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: var(--ion-color-light);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-}
-
-.current-player-info h3 {
-  margin: 0 0 15px 0;
-  color: var(--ion-color-primary);
-  font-size: 18px;
+  padding: 20px;
+  margin-bottom: 30px;
+  
+  h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+  }
 }
 
 .teams-container {
@@ -67,14 +68,18 @@
 }
 
 .team-section {
-  margin-bottom: 25px;
-}
-
-.team-title {
-  font-size: 20px;
-  font-weight: bold;
-  margin: 0 0 15px 0;
-  color: var(--ion-color-dark);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  
+  .team-title {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+  }
 }
 
 .team-players {
@@ -84,78 +89,89 @@
 }
 
 .player-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
   padding: 15px;
-  background: white;
-  border-radius: 12px;
-  border-left: 4px solid var(--ion-color-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.player-card.current {
-  background: var(--ion-color-primary-tint);
-  border-left-color: var(--ion-color-primary) !important;
-}
-
-.player-card.current-player {
-  background: var(--ion-color-success-tint);
-  border-left-color: var(--ion-color-success) !important;
-}
-
-.player-info {
-  flex: 1;
-}
-
-.player-name {
-  font-size: 16px;
-  font-weight: bold;
-  margin: 0 0 5px 0;
-  color: var(--ion-color-dark);
-}
-
-.team-info {
-  font-size: 14px;
-  color: var(--ion-color-medium);
-  margin: 0;
-}
-
-.role-badge {
-  font-size: 12px;
-  padding: 4px 8px;
-}
-
-.color-indicator {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #ccc;
+  
+  &.current {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  &.current-player {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .player-info {
+    flex: 1;
+    
+    .player-name {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    
+    .team-info {
+      font-size: 0.9rem;
+      color: #666;
+      margin: 0;
+    }
+    
+    .role-badge {
+      font-size: 0.8rem;
+    }
+  }
+  
+  .color-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .empty-slot {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
   padding: 15px;
-  background: var(--ion-color-light);
-  border-radius: 12px;
-  border: 2px dashed var(--ion-color-medium);
   text-align: center;
-}
-
-.empty-slot p {
-  margin: 0;
-  color: var(--ion-color-medium);
-  font-style: italic;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  
+  p {
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    font-style: italic;
+  }
 }
 
 .actions {
   text-align: center;
-}
-
-.leave-button {
-  --border-width: 2px;
-  font-weight: bold;
-  margin: 20px 0;
+  
+  .start-button {
+    --background: #28a745;
+    --color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .leave-button {
+    --color: #dc3545;
+    --border-color: #dc3545;
+    font-weight: bold;
+  }
+  
+  .start-info {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin: 0;
+  }
 }
 
 .loading-container {
@@ -163,10 +179,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 50vh;
-}
-
-.loading-container p {
-  margin-top: 20px;
-  color: var(--ion-color-medium);
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  ion-spinner {
+    --color: white;
+    margin-bottom: 20px;
+  }
+  
+  p {
+    color: white;
+    font-size: 1.1rem;
+  }
 }

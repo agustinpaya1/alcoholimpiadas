@@ -27,9 +27,9 @@ import { arrowBack } from 'ionicons/icons';
   ]
 })
 export class CreateRoomPage {
-  roomData: NewRoom = {
+  room: NewRoom = {
     name: '',
-    max_players: 4,
+    max_players: 50,
     num_teams: 2,
     status: 'waiting'
   };
@@ -48,7 +48,7 @@ export class CreateRoomPage {
   }
 
   async onSubmit() {
-    if (!this.roomData.name.trim()) {
+    if (!this.room.name.trim()) {
       alert('Por favor, introduce un nombre para la sala');
       return;
     }
@@ -63,12 +63,12 @@ export class CreateRoomPage {
     this.isCreating = true;
 
     try {
-      console.log('Datos a enviar:', this.roomData);
+      console.log('Datos a enviar:', this.room);
       
       const { room, player } = await this.supabaseService.createRoom({
-        name: this.roomData.name.trim(),
-        max_players: this.roomData.max_players,
-        num_teams: this.roomData.num_teams,
+        name: this.room.name.trim(),
+        max_players: this.room.max_players,
+        num_teams: this.room.num_teams,
         status: 'waiting'
       }, playerName.trim());
 

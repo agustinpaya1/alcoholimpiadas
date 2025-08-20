@@ -63,7 +63,7 @@ export class GamePage implements OnInit, OnDestroy {
    * Maneja el clic en CREAR SALA
    */
   onCreateRoom(): void {
-    this.router.navigate(['/create-room']);
+    this.router.navigate(['/pruebas']);
   }
 
   /**

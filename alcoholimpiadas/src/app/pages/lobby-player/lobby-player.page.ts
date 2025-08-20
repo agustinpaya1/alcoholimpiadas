@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { IonContent, IonButton, IonIcon, IonList, IonItem, IonLabel, IonBadge, IonSpinner } from '@ionic/angular/standalone';
+import { IonContent, IonButton, IonIcon, IonBadge, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { SupabaseService, Room, RoomPlayer } from '../../services/supabase.service';
 import { addIcons } from 'ionicons';
@@ -16,9 +16,6 @@ import { arrowBack, people, trophy, exitOutline } from 'ionicons/icons';
     IonContent,
     IonButton,
     IonIcon,
-    IonList,
-    IonItem,
-    IonLabel,
     IonBadge,
     IonSpinner
   ]
@@ -90,13 +87,17 @@ export class LobbyPlayerPage implements OnInit, OnDestroy {
   subscribeToPlayers(roomId: string) {
     this.subscription = this.supabaseService.subscribeToRoomPlayers(
       roomId,
-      (players) => {
+      async (players) => {
         this.players = players;
-        // Actualizar jugador actual
-        const user = this.supabaseService.getCurrentUser();
-        user.then(u => {
-          this.currentPlayer = players.find(p => p.user_id === u?.id) || null;
-        });
+        // Actualizar jugador actual de forma más robusta
+        try {
+          const user = await this.supabaseService.getCurrentUser();
+          if (user) {
+            this.currentPlayer = players.find(p => p.user_id === user.id) || null;
+          }
+        } catch (error) {
+          console.error('Error al actualizar jugador actual:', error);
+        }
       }
     );
   }

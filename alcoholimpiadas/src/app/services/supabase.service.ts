@@ -31,10 +31,10 @@ export type NewRoom = Omit<Room, 'id' | 'created_at' | 'current_players'>;
 
 // Colores disponibles por equipo
 export const TEAM_COLORS = {
-  1: ['#FF6B6B', '#FF8E8E'], // Rojos
-  2: ['#4ECDC4', '#7ED7D1'], // Azules/Verdes
-  3: ['#FFE66D', '#FFF099'], // Amarillos
-  4: ['#A8E6CF', '#C4F2E0']  // Verdes claros
+  1: ['#FF6B6B', '#FF8E8E', '#FFB1B1'], // Rojos
+  2: ['#4ECDC4', '#7ED7D1', '#AEE2DE'], // Verdes
+  3: ['#45B7D1', '#6BC5D8', '#91D3DF'], // Azules
+  4: ['#FFA726', '#FFB74D', '#FFC774']  // Naranjas
 };
 
 @Injectable({
@@ -50,13 +50,7 @@ export class SupabaseService {
   get client() {
     return this.supabase;
   }
-
-  // Obtener usuario actual
-  async getCurrentUser() {
-    const { data: { user } } = await this.supabase.auth.getUser();
-    return user;
-  }
-
+  
   // Crear una nueva sala
   async createRoom(room: NewRoom, playerName: string): Promise<{ room: Room, player: RoomPlayer }> {
     const user = await this.getCurrentUser();
@@ -106,89 +100,48 @@ export class SupabaseService {
 
   // Obtener todas las salas disponibles
   async getAvailableRooms(): Promise<Room[]> {
-    const { data, error } = await this.supabase
+    // Primero obtenemos las salas
+    const { data: rooms, error: roomsError } = await this.supabase
       .from('rooms')
-      .select(`
-        *,
-        room_players(count)
-      `)
+      .select('*')
       .eq('status', 'waiting')
       .order('created_at', { ascending: false });
-
-    if (error) {
-      throw error;
+  
+    if (roomsError) {
+      throw roomsError;
     }
-    
-    return (data || []).map(room => ({
+  
+    if (!rooms || rooms.length === 0) {
+      return [];
+    }
+  
+    // Luego obtenemos el conteo de jugadores para todas las salas de una vez
+    const roomIds = rooms.map(room => room.id);
+    const { data: playerCounts, error: playersError } = await this.supabase
+      .from('room_players')
+      .select('room_id')
+      .in('room_id', roomIds);
+  
+    if (playersError) {
+      console.error('Error al obtener conteo de jugadores:', playersError);
+      // Si hay error, devolvemos las salas con current_players = 0
+      return rooms.map(room => ({ ...room, current_players: 0 }));
+    }
+  
+    // Contamos jugadores por sala
+    const playerCountByRoom: { [roomId: string]: number } = {};
+    (playerCounts || []).forEach(player => {
+      playerCountByRoom[player.room_id] = (playerCountByRoom[player.room_id] || 0) + 1;
+    });
+  
+    // Combinamos la información
+    return rooms.map(room => ({
       ...room,
-      current_players: room.room_players?.[0]?.count || 0
+      current_players: playerCountByRoom[room.id] || 0
     }));
   }
 
-  // Unirse a una sala
-  async joinRoom(roomId: string, playerName: string): Promise<{ room: Room, player: RoomPlayer }> {
-    const user = await this.getCurrentUser();
-    if (!user) throw new Error('Usuario no autenticado');
-
-    // Verificar que la sala existe y está disponible
-    const { data: room, error: roomError } = await this.supabase
-      .from('rooms')
-      .select('*')
-      .eq('id', roomId)
-      .eq('status', 'waiting')
-      .single();
-
-    if (roomError || !room) {
-      throw new Error('Sala no encontrada o no disponible');
-    }
-
-    // Verificar si ya está en la sala
-    const { data: existingPlayer } = await this.supabase
-      .from('room_players')
-      .select('*')
-      .eq('room_id', roomId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (existingPlayer) {
-      return { room, player: existingPlayer };
-    }
-
-    // Contar jugadores actuales
-    const { count } = await this.supabase
-      .from('room_players')
-      .select('*', { count: 'exact' })
-      .eq('room_id', roomId);
-
-    if (count && count >= room.max_players) {
-      throw new Error('La sala está llena');
-    }
-
-    // Asignar equipo y color
-    const { team_number, team_color } = await this.assignTeamAndColor(roomId, room.num_teams);
-
-    // Agregar jugador a la sala
-    const { data: playerData, error: playerError } = await this.supabase
-      .from('room_players')
-      .insert({
-        room_id: roomId,
-        user_id: user.id,
-        player_name: playerName,
-        role: 'player',
-        team_number,
-        team_color
-      })
-      .select()
-      .single();
-
-    if (playerError) {
-      throw playerError;
-    }
-
-    return { room, player: playerData };
-  }
-
-  // Asignar equipo y color automáticamente
+  // Eliminar todo el bloque comentado /* Unirse a una sala ... */
   private async assignTeamAndColor(roomId: string, numTeams: number): Promise<{ team_number: number, team_color: string }> {
     // Obtener jugadores actuales por equipo
     const { data: players } = await this.supabase
@@ -251,8 +204,10 @@ export class SupabaseService {
 
   // Suscribirse a cambios en jugadores de sala
   subscribeToRoomPlayers(roomId: string, callback: (players: RoomPlayer[]) => void) {
+    const channelName = `room_players_${roomId}_${Date.now()}_${Math.random()}`;
+    
     return this.supabase
-      .channel(`room_players_${roomId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -261,12 +216,33 @@ export class SupabaseService {
           table: 'room_players',
           filter: `room_id=eq.${roomId}`
         },
-        () => {
-          // Recargar jugadores cuando hay cambios
-          this.getRoomPlayers(roomId).then(callback);
+        async () => {
+          try {
+            const players = await this.getRoomPlayers(roomId);
+            callback(players);
+          } catch (error) {
+            console.error('Error al recargar jugadores:', error);
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Estado de suscripción:', status);
+      });
+  }
+
+  // Obtener usuario actual
+  async getCurrentUser() {
+    try {
+      const { data: { user }, error } = await this.supabase.auth.getUser();
+      if (error) {
+        console.error('Error al obtener usuario:', error);
+        return null;
+      }
+      return user;
+    } catch (error) {
+      console.error('Error en getCurrentUser:', error);
+      return null;
+    }
   }
 
   // Iniciar juego (solo anfitrión)
@@ -314,7 +290,7 @@ export class SupabaseService {
     }
   }
 
-  // Actualizar sala (por ejemplo, cuando se une un jugador)
+  // Actualizar sala
   async updateRoom(roomId: string, updates: Partial<Room>): Promise<Room> {
     const { data, error } = await this.supabase
       .from('rooms')
@@ -327,5 +303,88 @@ export class SupabaseService {
       throw error;
     }
     return data;
+  }
+  // Unirse a una sala
+async joinRoom(roomId: string, playerName: string): Promise<{ room: Room, player: RoomPlayer }> {
+  const user = await this.getCurrentUser();
+  if (!user) throw new Error('Usuario no autenticado');
+
+  // Verificar que la sala existe y está disponible
+  const { data: room, error: roomError } = await this.supabase
+    .from('rooms')
+    .select('*')
+    .eq('id', roomId)
+    .eq('status', 'waiting')
+    .single();
+
+  if (roomError || !room) {
+    throw new Error('Sala no encontrada o no disponible');
+  }
+
+  // Verificar si ya está en la sala
+  const { data: existingPlayer } = await this.supabase
+    .from('room_players')
+    .select('*')
+    .eq('room_id', roomId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (existingPlayer) {
+    // Si el usuario es el creador de la sala, asegurar que tenga rol de host
+    if (room.created_by === user.id && existingPlayer.role !== 'host') {
+      const { data: updatedPlayer, error: updateError } = await this.supabase
+        .from('room_players')
+        .update({ role: 'host' })
+        .eq('id', existingPlayer.id)
+        .select()
+        .single();
+      
+      if (updateError) {
+        console.error('Error al actualizar rol de host:', updateError);
+        return { room, player: existingPlayer };
+      }
+      
+      return { room, player: updatedPlayer };
+    }
+    
+    return { room, player: existingPlayer };
+  }
+
+  // Contar jugadores actuales
+  const { count } = await this.supabase
+    .from('room_players')
+    .select('*', { count: 'exact' })
+    .eq('room_id', roomId);
+
+  if (count && count >= room.max_players) {
+    throw new Error('La sala está llena');
+  }
+
+  // Determinar el rol del jugador
+  const isHost = room.created_by === user.id;
+  const role = isHost ? 'host' : 'player';
+
+  // Asignar equipo y color
+  const { team_number, team_color } = await this.assignTeamAndColor(roomId, room.num_teams);
+
+  // Agregar jugador a la sala
+  const { data: playerData, error: playerError } = await this.supabase
+    .from('room_players')
+    .insert({
+      room_id: roomId,
+      user_id: user.id,
+      player_name: playerName,
+      role,
+      team_number,
+      team_color
+    })
+    .select()
+    .single();
+
+  if (playerError) {
+    throw playerError;
+  }
+
+  return { room, player: playerData };
   }
 }
