@@ -26,6 +26,20 @@ export interface RoomPlayer {
   joined_at: string;
 }
 
+// Modelo de Challenge (corregido)
+export interface Challenge {
+  id: string;
+  title: string;
+  description: string | null;
+  order: number | null;
+  status: string | null;
+  winner_team_id: string | null;
+  image_url: string | null;
+  duration: number | null;
+  difficulty: 'easy' | 'medium' | 'hard' | null;
+  created_at: string;
+}
+
 // Payload para crear una sala
 export type NewRoom = Omit<Room, 'id' | 'created_at' | 'current_players'>;
 
@@ -141,7 +155,6 @@ export class SupabaseService {
     }));
   }
 
-  // Eliminar todo el bloque comentado /* Unirse a una sala ... */
   private async assignTeamAndColor(roomId: string, numTeams: number): Promise<{ team_number: number, team_color: string }> {
     // Obtener jugadores actuales por equipo
     const { data: players } = await this.supabase
@@ -304,97 +317,124 @@ export class SupabaseService {
     }
     return data;
   }
+
   // Unirse a una sala
-async joinRoom(roomId: string, playerName: string): Promise<{ room: Room, player: RoomPlayer }> {
-  const user = await this.getCurrentUser();
-  if (!user) throw new Error('Usuario no autenticado');
+  async joinRoom(roomId: string, playerName: string): Promise<{ room: Room, player: RoomPlayer }> {
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error('Usuario no autenticado');
 
-  // Verificar que la sala existe y está disponible
-  const { data: room, error: roomError } = await this.supabase
-    .from('rooms')
-    .select('*')
-    .eq('id', roomId)
-    .eq('status', 'waiting')
-    .single();
+    // Verificar que la sala existe y está disponible
+    const { data: room, error: roomError } = await this.supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', roomId)
+      .eq('status', 'waiting')
+      .single();
 
-  if (roomError || !room) {
-    throw new Error('Sala no encontrada o no disponible');
-  }
+    if (roomError || !room) {
+      throw new Error('Sala no encontrada o no disponible');
+    }
 
-  // Verificar si ya está en la sala
-  const { data: existingPlayer } = await this.supabase
-    .from('room_players')
-    .select('*')
-    .eq('room_id', roomId)
-    .eq('user_id', user.id)
-    .single();
+    // Verificar si ya está en la sala
+    const { data: existingPlayer } = await this.supabase
+      .from('room_players')
+      .select('*')
+      .eq('room_id', roomId)
+      .eq('user_id', user.id)
+      .single();
 
-  if (existingPlayer) {
-    // Si el usuario es el creador de la sala, asegurar que tenga rol de host
-    if (room.created_by === user.id && existingPlayer.role !== 'host') {
-      const { data: updatedPlayer, error: updateError } = await this.supabase
-        .from('room_players')
-        .update({ role: 'host' })
-        .eq('id', existingPlayer.id)
-        .select()
-        .single();
-      
-      if (updateError) {
-        console.error('Error al actualizar rol de host:', updateError);
-        return { room, player: existingPlayer };
+    if (existingPlayer) {
+      // Si el usuario es el creador de la sala, asegurar que tenga rol de host
+      if (room.created_by === user.id && existingPlayer.role !== 'host') {
+        const { data: updatedPlayer, error: updateError } = await this.supabase
+          .from('room_players')
+          .update({ role: 'host' })
+          .eq('id', existingPlayer.id)
+          .select()
+          .single();
+        
+        if (updateError) {
+          console.error('Error al actualizar rol de host:', updateError);
+          return { room, player: existingPlayer };
+        }
+        
+        return { room, player: updatedPlayer };
       }
       
-      return { room, player: updatedPlayer };
+      return { room, player: existingPlayer };
+    }
+
+    // Contar jugadores actuales
+    const { count, error: countError } = await this.supabase
+      .from('room_players')
+      .select('*', { count: 'exact' })
+      .eq('room_id', roomId);
+    
+    console.log(`DEBUG - Sala ${roomId}:`);
+    console.log(`- Jugadores actuales: ${count}`);
+    console.log(`- Máximo permitido: ${room.max_players}`);
+    console.log(`- Room data:`, room);
+    
+    if (countError) {
+      console.error('Error al contar jugadores:', countError);
     }
     
-    return { room, player: existingPlayer };
+    if (count !== null && count >= room.max_players) {
+      throw new Error(`La sala está llena (${count}/${room.max_players})`);
+    }
+
+    // Determinar el rol del jugador
+    const isHost = room.created_by === user.id;
+    const role = isHost ? 'host' : 'player';
+
+    // Asignar equipo y color
+    const { team_number, team_color } = await this.assignTeamAndColor(roomId, room.num_teams);
+
+    // Agregar jugador a la sala
+    const { data: playerData, error: playerError } = await this.supabase
+      .from('room_players')
+      .insert({
+        room_id: roomId,
+        user_id: user.id,
+        player_name: playerName,
+        role,
+        team_number,
+        team_color
+      })
+      .select()
+      .single();
+
+    if (playerError) {
+      throw playerError;
+    }
+
+    return { room, player: playerData };
   }
 
-  // En el método joinRoom, alrededor de la línea 353:
-  // Contar jugadores actuales
-  const { count, error: countError } = await this.supabase
-    .from('room_players')
-    .select('*', { count: 'exact' })
-    .eq('room_id', roomId);
-  
-  console.log(`DEBUG - Sala ${roomId}:`);
-  console.log(`- Jugadores actuales: ${count}`);
-  console.log(`- Máximo permitido: ${room.max_players}`);
-  console.log(`- Room data:`, room);
-  
-  if (countError) {
-    console.error('Error al contar jugadores:', countError);
-  }
-  
-  if (count !== null && count >= room.max_players) {
-    throw new Error(`La sala está llena (${count}/${room.max_players})`);
+  // Obtener todas las pruebas
+  async getChallenges(): Promise<Challenge[]> {
+    const { data, error } = await this.supabase
+      .from('challenges')
+      .select('*')
+      .order('order', { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+    return data || [];
   }
 
-  // Determinar el rol del jugador
-  const isHost = room.created_by === user.id;
-  const role = isHost ? 'host' : 'player';
+  // Obtener una prueba específica
+  async getChallenge(challengeId: string): Promise<Challenge> {
+    const { data, error } = await this.supabase
+      .from('challenges')
+      .select('*')
+      .eq('id', challengeId)
+      .single();
 
-  // Asignar equipo y color
-  const { team_number, team_color } = await this.assignTeamAndColor(roomId, room.num_teams);
-
-  // Agregar jugador a la sala
-  const { data: playerData, error: playerError } = await this.supabase
-    .from('room_players')
-    .insert({
-      room_id: roomId,
-      user_id: user.id,
-      player_name: playerName,
-      role,
-      team_number,
-      team_color
-    })
-    .select()
-    .single();
-
-  if (playerError) {
-    throw playerError;
-  }
-
-  return { room, player: playerData };
+    if (error) {
+      throw error;
+    }
+    return data;
   }
 }

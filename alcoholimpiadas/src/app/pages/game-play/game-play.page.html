@@ -19,39 +19,143 @@
           <ion-icon name="trophy"></ion-icon>
           Ronda {{ currentRound }}
         </ion-badge>
+        <ion-badge color="success">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          {{ getCompletedChallengesCount() }}/{{ challenges.length }} completadas
+        </ion-badge>
       </div>
     </div>
 
-    <div class="teams-container">
-      <div class="team-section" *ngFor="let teamNum of getTeamNumbers()">
-        <h3 class="team-title">Equipo {{ teamNum }}</h3>
-        <div class="team-players">
-          <div 
-            class="player-card active" 
-            *ngFor="let player of getTeamPlayers(teamNum)"
-            [style.border-left-color]="player.team_color">
-            <div class="player-info">
-              <h4 class="player-name">{{ player.player_name }}</h4>
-              <ion-badge 
-                [color]="player.role === 'host' ? 'warning' : 'medium'"
-                class="role-badge">
-                {{ player.role === 'host' ? 'Anfitrión' : 'Jugador' }}
-              </ion-badge>
-            </div>
-            <div 
-              class="color-indicator" 
-              [style.background-color]="player.team_color">
-            </div>
-          </div>
+    <!-- Controles del anfitrión -->
+    <div class="host-controls" *ngIf="isHost">
+      <div class="control-buttons">
+        <ion-button 
+          size="small" 
+          color="success"
+          (click)="startChallenge()"
+          [disabled]="!currentChallenge || challengeInProgress">
+          <ion-icon name="play" slot="start"></ion-icon>
+          INICIAR
+        </ion-button>
+        
+        <ion-button 
+          size="small" 
+          color="warning"
+          (click)="pauseChallenge()"
+          [disabled]="!challengeInProgress">
+          <ion-icon name="pause" slot="start"></ion-icon>
+          PAUSAR
+        </ion-button>
+        
+        <ion-button 
+          size="small" 
+          color="danger"
+          (click)="endChallenge()"
+          [disabled]="!challengeInProgress">
+          <ion-icon name="stop" slot="start"></ion-icon>
+          FINALIZAR
+        </ion-button>
+      </div>
+      
+      <div class="winner-selection" *ngIf="challengeInProgress && currentChallenge">
+        <h4>Seleccionar Ganador:</h4>
+        <div class="team-winners">
+          <ion-button 
+            *ngFor="let teamNum of getTeamNumbers()"
+            size="small"
+            fill="outline"
+            (click)="selectWinner(teamNum)">
+            Equipo {{ teamNum }}
+          </ion-button>
         </div>
       </div>
     </div>
 
-    <div class="game-content">
-      <div class="current-challenge">
-        <h2>¡Bienvenidos al juego!</h2>
-        <p>El juego ha comenzado. Aquí se mostrarán las pruebas y desafíos.</p>
-        <p>Esta es la base para implementar la lógica del juego real.</p>
+    <!-- Temporizador de prueba -->
+    <div class="timer-container" *ngIf="challengeInProgress">
+      <div class="timer-display">
+        <ion-icon name="time" class="timer-icon"></ion-icon>
+        <span class="time-text">{{ formatTime(timeLeft) }}</span>
+      </div>
+    </div>
+
+    <!-- Lista de pruebas mejorada -->
+    <div class="challenges-container">
+      <h2 class="challenges-title">PRUEBAS DEL JUEGO</h2>
+      
+      <div class="challenges-grid">
+        <div 
+          *ngFor="let challenge of challenges; let i = index" 
+          class="challenge-card"
+          [class.active]="currentChallenge?.id === challenge.id"
+          [class.completed]="isChallengeCompleted(challenge.id)"
+          [class.locked]="!isChallengeUnlocked(i)"
+          [class.next-available]="isNextAvailable(i)"
+          (click)="selectChallenge(challenge, i)">
+          
+          <div class="challenge-header">
+            <div class="challenge-number">{{ i + 1 }}</div>
+            <div class="challenge-status-icon">
+              <ion-icon 
+                *ngIf="isChallengeCompleted(challenge.id)" 
+                name="checkmark-circle" 
+                color="success">
+              </ion-icon>
+              <ion-icon 
+                *ngIf="currentChallenge?.id === challenge.id && challengeInProgress" 
+                name="play-circle" 
+                color="primary">
+              </ion-icon>
+              <ion-icon 
+                *ngIf="!isChallengeUnlocked(i)" 
+                name="lock-closed" 
+                color="medium">
+              </ion-icon>
+              <ion-icon 
+                *ngIf="isNextAvailable(i)" 
+                name="radio-button-on" 
+                color="warning">
+              </ion-icon>
+            </div>
+          </div>
+          
+          <div class="challenge-content">
+            <div class="challenge-image">
+              <img [src]="challenge.image_url || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400&h=300&fit=crop'" 
+                   [alt]="challenge.title">
+              <div class="challenge-overlay" *ngIf="!isChallengeUnlocked(i)">
+                <ion-icon name="lock-closed"></ion-icon>
+              </div>
+            </div>
+            
+            <div class="challenge-info">
+              <h3 class="challenge-name">{{ challenge.title }}</h3>
+              <p class="challenge-description" *ngIf="isChallengeUnlocked(i)">{{ challenge.description || 'Sin descripción' }}</p>
+              <p class="challenge-locked-text" *ngIf="!isChallengeUnlocked(i)">Completa la prueba anterior para desbloquear</p>
+              
+              <div class="challenge-meta" *ngIf="isChallengeUnlocked(i)">
+                <span class="duration">
+                  <ion-icon name="time-outline"></ion-icon>
+                  {{ formatDuration(challenge.duration) }}
+                </span>
+                <span class="difficulty" [class]="challenge.difficulty || 'medium'">
+                  <ion-icon name="star"></ion-icon>
+                  {{ getDifficultyText(challenge.difficulty) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="challenge-actions" *ngIf="isChallengeUnlocked(i)">
+            <ion-button 
+              fill="clear" 
+              size="small"
+              (click)="openChallengeInstructions(challenge, $event)">
+              <ion-icon name="information-circle" slot="start"></ion-icon>
+              Ver instrucciones
+            </ion-button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -70,4 +174,69 @@
     <ion-spinner name="crescent"></ion-spinner>
     <p>Cargando juego...</p>
   </div>
+
+  <!-- Modal de instrucciones -->
+  <ion-modal [isOpen]="showInstructionsModal" (didDismiss)="closeInstructionsModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ selectedChallenge?.title }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeInstructionsModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      
+      <ion-content class="instructions-content">
+        <div class="instruction-cards">
+          <div class="progress-indicator">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="(currentInstructionStep + 1) / instructionSteps.length * 100"></div>
+            </div>
+            <span class="step-counter">{{ currentInstructionStep + 1 }} de {{ instructionSteps.length }}</span>
+          </div>
+
+          <div class="instruction-card" *ngIf="instructionSteps.length > 0">
+            <div class="card-header">
+              <ion-icon [name]="instructionSteps[currentInstructionStep].icon" color="primary"></ion-icon>
+              <h3>{{ instructionSteps[currentInstructionStep].title }}</h3>
+            </div>
+            <div class="card-content">
+              <p>{{ instructionSteps[currentInstructionStep].description }}</p>
+              <div class="card-image" *ngIf="instructionSteps[currentInstructionStep].image">
+                <img [src]="instructionSteps[currentInstructionStep].image" [alt]="instructionSteps[currentInstructionStep].title">
+              </div>
+            </div>
+          </div>
+
+          <div class="navigation-buttons">
+            <ion-button 
+              fill="outline" 
+              (click)="previousInstruction()"
+              [disabled]="currentInstructionStep === 0">
+              <ion-icon name="chevron-back" slot="start"></ion-icon>
+              Anterior
+            </ion-button>
+            
+            <ion-button 
+              *ngIf="currentInstructionStep < instructionSteps.length - 1"
+              (click)="nextInstruction()">
+              Siguiente
+              <ion-icon name="chevron-forward" slot="end"></ion-icon>
+            </ion-button>
+            
+            <ion-button 
+              *ngIf="currentInstructionStep === instructionSteps.length - 1"
+              color="success"
+              (click)="startChallengeFromModal()">
+              <ion-icon name="play" slot="start"></ion-icon>
+              ¡Empezar!
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>
