@@ -32,7 +32,7 @@ export interface Challenge {
   title: string;
   description: string | null;
   order: number | null;
-  status: string | null;
+  status: 'pending' | 'active' | 'completed' | null;
   winner_team_id: string | null;
   image_url: string | null;
   duration: number | null;
@@ -58,7 +58,13 @@ export class SupabaseService {
   private supabase: SupabaseClient;
 
   constructor() {
+    console.log('🔧 [SupabaseService] Inicializando servicio...');
+    console.log('🌐 [SupabaseService] URL:', environment.supabaseUrl);
+    console.log('🔑 [SupabaseService] Key disponible:', !!environment.supabaseKey);
+    
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+    
+    console.log('✅ [SupabaseService] Cliente creado exitosamente');
   }
 
   get client() {
@@ -413,15 +419,29 @@ export class SupabaseService {
 
   // Obtener todas las pruebas
   async getChallenges(): Promise<Challenge[]> {
-    const { data, error } = await this.supabase
-      .from('challenges')
-      .select('*')
-      .order('order', { ascending: true });
-
-    if (error) {
-      throw error;
+    console.log('🔍 [getChallenges] Iniciando consulta a Supabase...');
+    
+    try {
+      const { data, error } = await this.supabase
+        .from('challenges')
+        .select('*')
+        .order('order', { ascending: true });
+    
+      console.log('📊 [getChallenges] Respuesta de Supabase:', { data, error });
+      
+      if (error) {
+        console.error('❌ [getChallenges] Error en consulta:', error);
+        throw error;
+      }
+      
+      console.log('✅ [getChallenges] Datos obtenidos exitosamente:', data);
+      console.log('📈 [getChallenges] Cantidad de registros:', data?.length || 0);
+      
+      return data || [];
+    } catch (err) {
+      console.error('💥 [getChallenges] Error capturado:', err);
+      throw err;
     }
-    return data || [];
   }
 
   // Obtener una prueba específica
@@ -435,6 +455,31 @@ export class SupabaseService {
     if (error) {
       throw error;
     }
+    return data;
+  }
+
+  // Actualizar el estado de una prueba
+  async updateChallengeStatus(challengeId: string, status: 'pending' | 'active' | 'completed', winnerTeamId?: number): Promise<Challenge> {
+    console.log(`🔄 [updateChallengeStatus] Actualizando prueba ${challengeId} a estado: ${status}`);
+    
+    const updates: any = { status };
+    if (winnerTeamId !== undefined) {
+      updates.winner_team_id = winnerTeamId;
+    }
+    
+    const { data, error } = await this.supabase
+      .from('challenges')
+      .update(updates)
+      .eq('id', challengeId)
+      .select()
+      .single();
+  
+    if (error) {
+      console.error('❌ [updateChallengeStatus] Error:', error);
+      throw error;
+    }
+    
+    console.log('✅ [updateChallengeStatus] Prueba actualizada:', data);
     return data;
   }
 }
