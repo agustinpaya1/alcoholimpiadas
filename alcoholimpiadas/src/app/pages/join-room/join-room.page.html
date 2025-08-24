@@ -12,6 +12,8 @@
       <div class="search-container">
         <ion-item class="search-item">
           <ion-input 
+            id="searchTerm"
+            name="searchTerm"
             [(ngModel)]="searchTerm" 
             placeholder="Buscar sala..."
             (ionInput)="onSearchChange($event)">

@@ -33,7 +33,7 @@ export interface Challenge {
   description: string | null;
   order: number | null;
   status: 'pending' | 'active' | 'completed' | null;
-  winner_team_id: string | null;
+  winner_team_id: string | null;  // uuid en DB
   image_url: string | null;
   duration: number | null;
   difficulty: 'easy' | 'medium' | 'hard' | null;
@@ -459,27 +459,49 @@ export class SupabaseService {
   }
 
   // Actualizar el estado de una prueba
-  async updateChallengeStatus(challengeId: string, status: 'pending' | 'active' | 'completed', winnerTeamId?: number): Promise<Challenge> {
+  async updateChallengeStatus(challengeId: string, status: 'pending' | 'active' | 'completed', winnerTeamId?: string): Promise<Challenge> {
     console.log(`🔄 [updateChallengeStatus] Actualizando prueba ${challengeId} a estado: ${status}`);
-    
+
+    // Verificar que existe el challenge antes de actualizar
+    const { data: existing, error: getErr } = await this.supabase
+      .from('challenges')
+      .select('id')
+      .eq('id', challengeId)
+      .maybeSingle();
+  
+    if (getErr) {
+      console.error('❌ [updateChallengeStatus] Error al verificar existencia:', getErr);
+      throw getErr;
+    }
+    if (!existing) {
+      const e = new Error(`Challenge con id ${challengeId} no encontrado`);
+      console.error('❌ [updateChallengeStatus]', e);
+      throw e;
+    }
+
     const updates: any = { status };
     if (winnerTeamId !== undefined) {
       updates.winner_team_id = winnerTeamId;
     }
-    
+
     const { data, error } = await this.supabase
       .from('challenges')
       .update(updates)
       .eq('id', challengeId)
-      .select()
-      .single();
+      .select(); // no .single(), tomamos la primera fila si existe
   
     if (error) {
       console.error('❌ [updateChallengeStatus] Error:', error);
       throw error;
     }
-    
-    console.log('✅ [updateChallengeStatus] Prueba actualizada:', data);
-    return data;
+
+    if (!data || data.length === 0) {
+      const e = new Error(`No se actualizó ninguna fila para challengeId=${challengeId}`);
+      console.error('❌ [updateChallengeStatus]', e);
+      throw e;
+    }
+
+    console.log('✅ [updateChallengeStatus] Prueba actualizada:', data[0]);
+    return data[0];
   }
 }

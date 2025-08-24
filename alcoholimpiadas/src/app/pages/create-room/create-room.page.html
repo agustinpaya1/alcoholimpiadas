@@ -12,8 +12,9 @@
       
       <form (ngSubmit)="onSubmit()" #roomForm="ngForm">
         <ion-item class="form-item">
-          <ion-label position="stacked">Nombre de la Sala</ion-label>
+          <ion-label position="stacked" for="roomName">Nombre de la Sala</ion-label>
           <ion-input 
+            id="roomName"
             [(ngModel)]="room.name" 
             name="roomName" 
             placeholder="Nombre de la sala" 
@@ -22,8 +23,9 @@
         </ion-item>
 
         <ion-item class="form-item">
-          <ion-label position="stacked">Número de Equipos</ion-label>
+          <ion-label position="stacked" for="numTeams">Número de Equipos</ion-label>
           <ion-select 
+            id="numTeams"
             [(ngModel)]="room.num_teams" 
             name="numTeams" 
             placeholder="Selecciona número de equipos"
@@ -36,8 +38,9 @@
         </ion-item>
 
         <ion-item class="form-item">
-          <ion-label position="stacked">Máximo de jugadores</ion-label>
+          <ion-label position="stacked" for="maxPlayers">Máximo de jugadores</ion-label>
           <ion-select 
+            id="maxPlayers"
             [(ngModel)]="room.max_players" 
             name="maxPlayers" 
             placeholder="Selecciona número de jugadores"

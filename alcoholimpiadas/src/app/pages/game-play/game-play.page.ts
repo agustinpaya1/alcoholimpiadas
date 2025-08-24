@@ -96,9 +96,12 @@ export class GamePlayPage implements OnInit, OnDestroy {
   }
 
   async loadGameData(roomId: string) {
-    console.log('🚀 [loadGameData] Iniciando carga de datos del juego para roomId:', roomId);
+    console.log('🎮 [loadGameData] Iniciando carga de datos del juego para roomId:', roomId);
     
     try {
+      // Comentar temporalmente esta línea hasta que esté implementado correctamente
+      // await this.resetChallengesForNewGame();
+      
       console.log('📡 [loadGameData] Cargando datos de la sala...');
       
       // Cargar datos de la sala
@@ -216,13 +219,11 @@ export class GamePlayPage implements OnInit, OnDestroy {
     return isUnlocked;
   }
 
-  // Cambiar el método isChallengeCompleted para consultar el estado real
   isChallengeCompleted(challengeId: string): boolean {
     const challenge = this.challenges.find(c => c.id === challengeId);
     return challenge?.status === 'completed';
   }
   
-  // Eliminar los métodos duplicados (líneas 225-266) y mantener solo estos:
   async endChallenge() {
     if (this.timer) {
       clearInterval(this.timer);
@@ -235,37 +236,58 @@ export class GamePlayPage implements OnInit, OnDestroy {
   }
   
   async selectWinner(teamNumber: number) {
-    if (!this.isHost || !this.currentChallenge) return;
+    if (!this.isHost || !this.currentChallenge) {
+      console.log('❌ No se puede seleccionar ganador: isHost=', this.isHost, 'currentChallenge=', this.currentChallenge);
+      return;
+    }
     
     console.log(`🏆 Equipo ${teamNumber} seleccionado como ganador`);
+    console.log('🔍 Challenge actual:', this.currentChallenge);
     
     try {
-      // Actualizar el estado de la prueba en la base de datos
-      await this.supabaseService.updateChallengeStatus(
+      console.log('📤 Enviando actualización a Supabase...');
+  
+      // Guardar el id para calcular luego el siguiente índice
+      const prevChallengeId = this.currentChallenge.id;
+  
+      // Actualizar solo el estado (no enviamos winner_team_id por ahora)
+      const updatedChallenge = await this.supabaseService.updateChallengeStatus(
         this.currentChallenge.id, 
-        'completed', 
-        teamNumber
+        'completed'
       );
       
-      // Actualizar el estado local de la prueba
-      const challengeIndex = this.challenges.findIndex(c => c.id === this.currentChallenge!.id);
-      if (challengeIndex !== -1) {
-        this.challenges[challengeIndex].status = 'completed';
-        this.challenges[challengeIndex].winner_team_id = teamNumber.toString();
+      console.log('✅ Respuesta de Supabase:', updatedChallenge);
+      
+      // Recargar las pruebas desde la base de datos para obtener el estado actualizado
+      const roomId = this.route.snapshot.paramMap.get('roomId');
+      if (roomId) {
+        console.log('🔄 Recargando pruebas desde la base de datos...');
+        await this.loadChallenges(roomId);
       }
       
-      // Marcar la prueba como completada localmente
-      if (this.currentChallenge && !this.isChallengeCompleted(this.currentChallenge.id)) {
+      // Marcar la prueba como completada localmente también (para el contador)
+      if (this.currentChallenge && !this.completedChallenges.includes(this.currentChallenge.id)) {
         this.completedChallenges.push(this.currentChallenge.id);
+        console.log('📝 Prueba agregada a completedChallenges:', this.completedChallenges);
       }
       
       // Finalizar la prueba actual
       await this.endChallenge();
+  
+      // Auto-avanzar a la siguiente prueba desbloqueada
+      const prevIndex = this.challenges.findIndex(c => c.id === prevChallengeId);
+      const nextIndex = prevIndex + 1;
+      if (nextIndex < this.challenges.length && this.isChallengeUnlocked(nextIndex)) {
+        this.currentChallenge = this.challenges[nextIndex];
+        console.log('➡️ Avanzando a la siguiente prueba:', this.currentChallenge);
+      } else {
+        console.log('ℹ️ No hay siguiente prueba desbloqueada aún o ya es la última.');
+      }
       
       console.log('✅ Prueba completada y actualizada en la base de datos');
     } catch (error) {
-      console.error('❌ Error al actualizar la prueba:', error);
-      alert('Error al finalizar la prueba');
+      console.error('❌ Error completo al actualizar la prueba:', error);
+      
     }
   }
 
@@ -398,32 +420,7 @@ export class GamePlayPage implements OnInit, OnDestroy {
     }
     this.challengeInProgress = false;
   }
-  /*
-  async endChallenge() {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-    this.challengeInProgress = false;
-    this.timeLeft = 0;
-    
-    // Marcar la prueba como completada
-    if (this.currentChallenge && !this.isChallengeCompleted(this.currentChallenge.id)) {
-      this.completedChallenges.push(this.currentChallenge.id);
-    }
-    
-    console.log('Prueba finalizada');
-  }
 
-  async selectWinner(teamNumber: number) {
-    if (!this.isHost || !this.currentChallenge) return;
-    
-    console.log(`Equipo ${teamNumber} seleccionado como ganador`);
-    
-    // Finalizar la prueba actual
-    await this.endChallenge();
-  }
-*/
   formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -458,4 +455,36 @@ export class GamePlayPage implements OnInit, OnDestroy {
   goBack() {
     this.router.navigate(['/lobby-host', this.room?.id]);
   }
-}
+
+  // Mover este método AQUÍ, dentro de la clase
+  async resetChallengesForNewGame() {
+    console.log('🔄 [resetChallengesForNewGame] Reseteando estado de pruebas...');
+    
+    try {
+      if (!this.room?.id) {
+        console.log('❌ No hay room ID disponible para resetear pruebas');
+        return;
+      }
+  
+      // Resetear todas las pruebas de esta sala a estado 'pending'
+      const { error } = await this.supabaseService.client
+        .from('challenges')
+        .update({ 
+          status: 'pending', 
+          winner_team_id: null 
+        })
+        .eq('room_id', this.room.id);
+  
+      if (error) {
+        console.error('❌ Error al resetear pruebas:', error);
+        throw error;
+      }
+  
+      console.log('✅ Pruebas reseteadas correctamente');
+    } catch (error: any) {
+      console.error('💥 Error en resetChallengesForNewGame:', error);
+      // No lanzar el error para no bloquear la carga del juego
+    }
+  }
+  
+  } // <- Este es el cierre de la clase GamePlayPage
