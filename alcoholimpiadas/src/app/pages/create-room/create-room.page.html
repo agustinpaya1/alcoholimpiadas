@@ -24,17 +24,17 @@
 
         <ion-item class="form-item">
           <ion-label position="stacked" for="numTeams">Número de Equipos</ion-label>
-          <ion-select 
+          <ion-input
             id="numTeams"
-            [(ngModel)]="room.num_teams" 
-            name="numTeams" 
-            placeholder="Selecciona número de equipos"
+            type="number"
+            inputmode="numeric"
+            min="2"
+            max="16"
+            [(ngModel)]="room.num_teams"
+            name="numTeams"
+            placeholder="Ej: 3"
             required>
-            <ion-select-option [value]="2">2 equipos</ion-select-option>
-            <ion-select-option [value]="4">4 equipos</ion-select-option>
-            <ion-select-option [value]="8">8 equipos</ion-select-option>
-            <ion-select-option [value]="16">16 equipos</ion-select-option>
-          </ion-select>
+          </ion-input>
         </ion-item>
 
         <ion-item class="form-item">

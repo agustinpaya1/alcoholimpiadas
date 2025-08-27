@@ -51,9 +51,7 @@ export const TEAM_COLORS = {
   4: ['#FFA726', '#FFB74D', '#FFC774']  // Naranjas
 };
 
-@Injectable({
-  providedIn: 'root'
-})
+
 export class SupabaseService {
   private supabase: SupabaseClient;
 
@@ -620,4 +618,6 @@ export class SupabaseService {
     console.log('✅ [updateChallengeStatus] Prueba actualizada:', data[0]);
     return data[0];
   }
-}
+}@Injectable({
+  providedIn: 'root'
+})
