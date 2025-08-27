@@ -44,11 +44,12 @@ export interface Challenge {
 export type NewRoom = Omit<Room, 'id' | 'created_at' | 'current_players'>;
 
 // Colores disponibles por equipo
+
 export const TEAM_COLORS = {
-  1: ['#FF6B6B', '#FF8E8E', '#FFB1B1'], // Rojos
-  2: ['#4ECDC4', '#7ED7D1', '#AEE2DE'], // Verdes
-  3: ['#45B7D1', '#6BC5D8', '#91D3DF'], // Azules
-  4: ['#FFA726', '#FFB74D', '#FFC774']  // Naranjas
+  1: ['#FFA726', '#FFB74D', '#FFC774'], // Naranja (equipo 1)
+  2: ['#45B7D1', '#6BC5D8', '#91D3DF'], // Azul (equipo 2)
+  3: ['#FFFF00', '#FFFF33', '#FFFF66'], // Amarillo fosforescente (equipo 3)
+  4: ['#4ECDC4', '#7ED7D1', '#AEE2DE']  // Verdes (sin cambios)
 };
 
 
@@ -618,6 +619,5 @@ export class SupabaseService {
     console.log('✅ [updateChallengeStatus] Prueba actualizada:', data[0]);
     return data[0];
   }
-}@Injectable({
-  providedIn: 'root'
-})
+}
+
