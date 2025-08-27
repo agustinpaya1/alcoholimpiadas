@@ -444,6 +444,122 @@ export class SupabaseService {
     }
   }
 
+  // Sembrar (recrear) la lista definitiva de challenges
+  async seedChallenges(): Promise<void> {
+    console.log('🌱 [seedChallenges] Preparando datos definitivos de pruebas...');
+
+    const now = new Date().toISOString();
+    // Lista definitiva
+    const definitive = [
+      {
+        title: 'Guerra de globos',
+        description: 'Compite por reventar los globos del equipo rival sin perder los tuyos.',
+        order: 1,
+        status: 'pending' as const,
+        winner_team_id: null as string | null,
+        image_url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=800&h=600&fit=crop',
+        duration: 180,
+        difficulty: 'medium' as const,
+        created_at: now
+      },
+      {
+        title: 'Relevos',
+        description: 'Carrera por equipos pasándose el testigo hasta completar el circuito.',
+        order: 2,
+        status: 'pending' as const,
+        winner_team_id: null,
+        image_url: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&h=600&fit=crop',
+        duration: 300,
+        difficulty: 'medium' as const,
+        created_at: now
+      },
+      {
+        title: 'Pañuelo',
+        description: 'Clásico juego de rapidez: corre a por el pañuelo y vuelve sin ser pillado.',
+        order: 3,
+        status: 'pending' as const,
+        winner_team_id: null,
+        image_url: 'https://images.unsplash.com/photo-1552234994-66ba234fd567?w=800&h=600&fit=crop',
+        duration: 180,
+        difficulty: 'easy' as const,
+        created_at: now
+      },
+      {
+        title: 'Cuerda',
+        description: 'El equipo más fuerte gana tirando de la cuerda al rival.',
+        order: 4,
+        status: 'pending' as const,
+        winner_team_id: null,
+        image_url: 'https://images.unsplash.com/photo-1516534775068-ba3e7458af70?w=800&h=600&fit=crop',
+        duration: 180,
+        difficulty: 'hard' as const,
+        created_at: now
+      },
+      {
+        title: 'Beerpong',
+        description: 'Lanza pelotas a los vasos del rival. ¡Acierta y suma puntos!',
+        order: 5,
+        status: 'pending' as const,
+        winner_team_id: null,
+        image_url: 'https://images.unsplash.com/photo-1531818235588-c00b4031dab9?w=800&h=600&fit=crop',
+        duration: 420,
+        difficulty: 'medium' as const,
+        created_at: now
+      },
+      {
+        title: 'Flip the cup',
+        description: 'Bebe y voltea el vaso; el primer equipo en completar gana.',
+        order: 6,
+        status: 'pending' as const,
+        winner_team_id: null,
+        image_url: 'https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?w=800&h=600&fit=crop',
+        duration: 240,
+        difficulty: 'easy' as const,
+        created_at: now
+      }
+    ];
+
+    try {
+      // 1) Borrar todos los challenges existentes (cambios definitivos)
+      const { data: existing, error: selErr } = await this.supabase
+        .from('challenges')
+        .select('id');
+
+      if (selErr) {
+        console.error('❌ [seedChallenges] Error seleccionando existentes:', selErr);
+        throw selErr;
+      }
+
+      if (existing && existing.length > 0) {
+        const ids = existing.map((x: any) => x.id);
+        const { error: delErr } = await this.supabase
+          .from('challenges')
+          .delete()
+          .in('id', ids);
+
+        if (delErr) {
+          console.error('❌ [seedChallenges] Error borrando existentes:', delErr);
+          throw delErr;
+        }
+      }
+
+      // 2) Insertar definitivos
+      const { error: insErr } = await this.supabase
+        .from('challenges')
+        .insert(definitive);
+
+      if (insErr) {
+        console.error('❌ [seedChallenges] Error insertando definitivos:', insErr);
+        throw insErr;
+      }
+
+      console.log('✅ [seedChallenges] Pruebas definitivas insertadas correctamente');
+    } catch (e) {
+      console.error('💥 [seedChallenges] Error general:', e);
+      throw e;
+    }
+  }
+
   // Obtener una prueba específica
   async getChallenge(challengeId: string): Promise<Challenge> {
     const { data, error } = await this.supabase

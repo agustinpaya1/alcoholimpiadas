@@ -1,25 +1,70 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Registro</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding">
-  <form (ngSubmit)="register()">
-    <ion-item>
-      <ion-label position="floating">Correo electrónico</ion-label>
-      <ion-input [(ngModel)]="email" name="email" type="email" required></ion-input>
-    </ion-item>
-
-    <ion-item>
-      <ion-label position="floating">Contraseña</ion-label>
-      <ion-input [(ngModel)]="password" name="password" type="password" required></ion-input>
-    </ion-item>
-
-    <ion-button expand="block" type="submit" [disabled]="loading">
-      Crear cuenta
+<ion-content [fullscreen]="true">
+  <!-- Botón de atrás en la esquina superior izquierda -->
+  <div class="back-button-container">
+    <ion-button fill="clear" (click)="goToLogin()" class="back-button">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
     </ion-button>
+  </div>
 
-    <ion-text color="danger" *ngIf="error">{{ error }}</ion-text>
-  </form>
+  <div class="login-container">
+    <div class="login-card">
+      <h2 class="login-title">Registro</h2>
+
+      <form (ngSubmit)="register()">
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <div class="input-container">
+            <ion-input 
+              id="email" 
+              name="email" 
+              type="email" 
+              [(ngModel)]="userData.email" 
+              (ionInput)="handleInputChange()" 
+              (ionBlur)="handleBlur('email')"
+              placeholder="Tu email"
+              class="custom-input"
+              autocomplete="email">
+            </ion-input>
+          </div>
+          <p class="error-message" *ngIf="touched['email'] && errors['email']">{{ errors['email'] }}</p>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Contraseña</label>
+          <div class="input-container password-container">
+            <ion-input 
+              id="password" 
+              name="password" 
+              [type]="showPassword ? 'text' : 'password'" 
+              [(ngModel)]="userData.password" 
+              (ionInput)="handleInputChange()" 
+              (ionBlur)="handleBlur('password')"
+              placeholder="Tu contraseña"
+              class="custom-input"
+              autocomplete="new-password">
+            </ion-input>
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility()">
+              <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+            </button>
+          </div>
+          <p class="error-message" *ngIf="touched['password'] && errors['password']">{{ errors['password'] }}</p>
+        </div>
+
+        <ion-button expand="block" type="submit" [disabled]="loading" class="login-button">
+          {{ loading ? 'Cargando...' : 'Crear cuenta' }}
+        </ion-button>
+
+        <ion-text color="danger" *ngIf="error">
+          <p class="ion-padding-top error-message">{{ error }}</p>
+        </ion-text>
+      </form>
+
+      <div class="register-link">
+        ¿Ya tienes cuenta? <a (click)="goToLogin()">Inicia sesión</a>
+      </div>
+    </div>
+  </div>
 </ion-content>

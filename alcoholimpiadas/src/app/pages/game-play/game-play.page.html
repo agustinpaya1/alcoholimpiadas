@@ -57,6 +57,14 @@
           <ion-icon name="stop" slot="start"></ion-icon>
           FINALIZAR
         </ion-button>
+
+        <ion-button 
+          size="small"
+          color="tertiary"
+          (click)="syncChallenges()">
+          <ion-icon name="refresh" slot="start"></ion-icon>
+          Sincronizar pruebas
+        </ion-button>
       </div>
       
       <div class="winner-selection" *ngIf="challengeInProgress && currentChallenge">
@@ -243,7 +251,6 @@
   </ion-modal>
 </ion-content>
 
-<!-- ... existing code ... -->
 <div class="podium-overlay" *ngIf="showPodium">
   <div class="podium-modal">
     <h2 class="podium-title">Ganador de las Alcoholimpiadas</h2>

@@ -619,4 +619,21 @@ export class GamePlayPage implements OnInit, OnDestroy {
         return 'Medio';
     }
   }
+
+  // Sincroniza en Supabase y recarga en la vista
+  async syncChallenges() {
+    if (!this.isHost) return;
+    if (!this.room?.id) return;
+
+    this.isLoading = true;
+    try {
+      await this.supabaseService.seedChallenges();
+      await this.loadChallenges(this.room.id);
+    } catch (e) {
+      console.error('❌ [syncChallenges] Error:', e);
+      alert('No se pudieron sincronizar las pruebas.');
+    } finally {
+      this.isLoading = false;
+    }
+  }
 }

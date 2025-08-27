@@ -7,7 +7,7 @@
   </div>
   <div class="join-room-container">
     <div class="content">
-      <h1 class="title">SALAS</h1>
+      <h1 class="title">PARTIDAS</h1>
       
       <div class="search-container">
         <ion-item class="search-item">
@@ -15,7 +15,7 @@
             id="searchTerm"
             name="searchTerm"
             [(ngModel)]="searchTerm" 
-            placeholder="Buscar sala..."
+            placeholder="Buscar partida..."
             (ionInput)="onSearchChange($event)">
             <ion-icon name="search" slot="start"></ion-icon>
           </ion-input>
@@ -29,12 +29,12 @@
 
         <div *ngIf="isLoading" class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>Cargando salas...</p>
+          <p>Cargando partidas...</p>
         </div>
 
         <!-- Mis Salas (donde soy anfitrión) -->
         <div *ngIf="!isLoading && filteredMyRooms.length > 0" class="section">
-          <h2 class="section-title">🏠 Mis Salas</h2>
+          <h2 class="section-title">🏠 Mis partidas</h2>
           <ion-list class="rooms-list">
             <ion-item 
               *ngFor="let room of filteredMyRooms" 
@@ -57,11 +57,9 @@
 
         <!-- Salas Disponibles -->
         <div *ngIf="!isLoading" class="section">
-          <h2 class="section-title">🌐 Salas Disponibles</h2>
-          
           <div *ngIf="filteredAvailableRooms.length === 0" class="no-rooms-container">
             <ion-icon name="chatbubbles-outline"></ion-icon>
-            <p>No hay salas disponibles</p>
+            <p>No hay partidas disponibles</p>
             <ion-button fill="clear" (click)="loadRooms()">Recargar</ion-button>
           </div>
 
@@ -89,16 +87,6 @@
       <!-- Nickname guardado -->
       <div *ngIf="savedNickname" class="saved-nickname">
         <p>🎮 Nickname guardado: <strong>{{ savedNickname }}</strong></p>
-      </div>
-
-      <div class="refresh-button-container">
-        <ion-button 
-          fill="clear" 
-          (click)="loadRooms()" 
-          [disabled]="isLoading">
-          <ion-icon name="refresh" slot="start"></ion-icon>
-          Recargar salas
-        </ion-button>
       </div>
     </div>
   </div>

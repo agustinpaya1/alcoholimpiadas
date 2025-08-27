@@ -8,16 +8,16 @@
 
   <div class="create-room-container">
     <div class="form-container">
-      <h1 class="title">CREAR NUEVA SALA</h1>
+      <h1 class="title">CREAR NUEVA PARTIDA</h1>
       
       <form (ngSubmit)="onSubmit()" #roomForm="ngForm">
         <ion-item class="form-item">
-          <ion-label position="stacked" for="roomName">Nombre de la Sala</ion-label>
+          <ion-label position="stacked" for="roomName">Nombre de la partida</ion-label>
           <ion-input 
             id="roomName"
             [(ngModel)]="room.name" 
             name="roomName" 
-            placeholder="Nombre de la sala" 
+            placeholder="Nombre de la partida" 
             required>
           </ion-input>
         </ion-item>
@@ -58,7 +58,7 @@
             expand="block" 
             class="create-button"
             [disabled]="!roomForm.form.valid || isCreating">
-            {{ isCreating ? 'CREANDO...' : 'CREAR SALA' }}
+            {{ isCreating ? 'CREANDO...' : 'CREAR PARTIDA' }}
           </ion-button>
         </div>
       </form>

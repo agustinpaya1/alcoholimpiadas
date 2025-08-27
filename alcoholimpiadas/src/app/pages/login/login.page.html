@@ -1,30 +1,75 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Iniciar sesión</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding">
-  <form (ngSubmit)="login()">
-    <ion-item>
-      <ion-label position="floating">Email</ion-label>
-      <ion-input [(ngModel)]="email" name="email" type="email" required></ion-input>
-    </ion-item>
-
-    <ion-item>
-      <ion-label position="floating">Contraseña</ion-label>
-      <ion-input [(ngModel)]="password" name="password" type="password" required></ion-input>
-    </ion-item>
-
-    <ion-button expand="full" type="submit" [disabled]="loading">
-      {{ loading ? 'Cargando...' : 'Entrar' }}
+<ion-content [fullscreen]="true">
+  <!-- Botón de atrás en la esquina superior izquierda -->
+  <div class="back-button-container">
+    <ion-button fill="clear" (click)="goToRegister()" class="back-button">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
     </ion-button>
+  </div>
 
-    <ion-text color="danger" *ngIf="error">
-      <p class="ion-padding-top">{{ error }}</p>
-    </ion-text>
-  </form>
-  <div style="background: yellow; padding: 1rem; text-align: center;">
-  ¿No tienes cuenta? <a (click)="goToRegister()">Regístrate</a>
-</div>
+  <div class="login-container">
+    <div class="login-card">
+      <h2 class="login-title">Iniciar sesión</h2>
+
+      <form (ngSubmit)="login()">
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <div class="input-container">
+            <ion-input 
+              id="email" 
+              name="email" 
+              type="email" 
+              [(ngModel)]="userData.email" 
+              (ionInput)="handleInputChange()" 
+              (ionBlur)="handleBlur('email')"
+              placeholder="Tu email"
+              class="custom-input"
+              autocomplete="email">
+            </ion-input>
+          </div>
+          <p class="error-message" *ngIf="touched['email'] && errors['email']">{{ errors['email'] }}</p>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Contraseña</label>
+          <div class="input-container password-container">
+            <ion-input 
+              id="password" 
+              name="password" 
+              [type]="showPassword ? 'text' : 'password'" 
+              [(ngModel)]="userData.password" 
+              (ionInput)="handleInputChange()" 
+              (ionBlur)="handleBlur('password')"
+              placeholder="Tu contraseña"
+              class="custom-input"
+              autocomplete="current-password">
+            </ion-input>
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility()">
+              <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+            </button>
+          </div>
+          <p class="error-message" *ngIf="touched['password'] && errors['password']">{{ errors['password'] }}</p>
+        </div>
+
+        <div class="remember-me">
+          <ion-checkbox [(ngModel)]="rememberMe" name="rememberMe"></ion-checkbox>
+          <label for="rememberMe" class="remember-label">Recuérdame siempre</label>
+        </div>
+
+        <ion-button expand="block" type="submit" [disabled]="loading" class="login-button">
+          {{ loading ? 'Cargando...' : 'Entrar' }}
+        </ion-button>
+
+        <ion-text color="danger" *ngIf="error">
+          <p class="ion-padding-top error-message">{{ error }}</p>
+        </ion-text>
+      </form>
+
+      <div class="register-link">
+        ¿No tienes cuenta? <a (click)="goToRegister()">Regístrate</a>
+      </div>
+    </div>
+  </div>
 </ion-content>
