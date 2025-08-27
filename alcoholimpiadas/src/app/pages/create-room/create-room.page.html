@@ -38,20 +38,18 @@
         </ion-item>
 
         <ion-item class="form-item">
-          <ion-label position="stacked" for="maxPlayers">Máximo de jugadores</ion-label>
-          <ion-select 
+          <ion-label position="stacked" for="maxPlayers">Número exacto de jugadores</ion-label>
+          <ion-input
             id="maxPlayers"
-            [(ngModel)]="room.max_players" 
-            name="maxPlayers" 
-            placeholder="Selecciona número de jugadores"
+            type="number"
+            inputmode="numeric"
+            min="2"
+            max="100"
+            [(ngModel)]="room.max_players"
+            name="maxPlayers"
+            placeholder="Ej: 28"
             required>
-            <ion-select-option [value]="4">4 jugadores</ion-select-option>
-            <ion-select-option [value]="6">6 jugadores</ion-select-option>
-            <ion-select-option [value]="8">8 jugadores</ion-select-option>
-            <ion-select-option [value]="12">12 jugadores</ion-select-option>
-            <ion-select-option [value]="16">16 jugadores</ion-select-option>
-            <ion-select-option [value]="20">20 jugadores</ion-select-option>
-          </ion-select>
+          </ion-input>
         </ion-item>
 
         <div class="button-container">

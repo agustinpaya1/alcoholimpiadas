@@ -53,6 +53,26 @@ export class CreateRoomPage {
       return;
     }
 
+    // Validaciones nuevas para número exacto de jugadores
+    const maxPlayers = Number(this.room.max_players);
+    const numTeams = Number(this.room.num_teams);
+
+    if (!Number.isInteger(maxPlayers) || maxPlayers < 2) {
+      alert('Introduce un número válido de jugadores (mínimo 2).');
+      return;
+    }
+    if (!Number.isInteger(numTeams) || numTeams < 1) {
+      alert('Selecciona un número de equipos válido.');
+      return;
+    }
+    if (numTeams > maxPlayers) {
+      alert('El número de equipos no puede ser mayor que el número de jugadores.');
+      return;
+    }
+
+    // Nota: el reparto en equipos se equilibra automáticamente al unirse los jugadores
+    // ya que assignTeamAndColor elige siempre el equipo con menos jugadores.
+
     // Pedir nombre del jugador
     const playerName = prompt('Introduce tu nombre:');
     if (!playerName?.trim()) {

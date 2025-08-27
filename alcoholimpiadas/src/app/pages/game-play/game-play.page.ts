@@ -9,6 +9,7 @@ import {
   checkmarkCircle, playCircle, lockClosed, star, informationCircle, 
   close, chevronBack, chevronForward, radioButtonOn 
 } from 'ionicons/icons';
+import { AlertController } from '@ionic/angular';
 
 // Interfaz para los pasos de instrucciones
 interface InstructionStep {
@@ -60,13 +61,29 @@ export class GamePlayPage implements OnInit, OnDestroy {
   // Array para trackear pruebas completadas
   completedChallenges: string[] = [];
 
+  // Ganadores locales por challenge (team_number)
+  private localWinners: Record<string, number> = {};
   // Colores para los equipos
   teamColors: string[] = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA726', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
 
+  // Evita duplicados al seleccionar ganador
+  updatingWinner = false;
+
+  // Devuelve un UUID válido para winner_team_id usando el id de un jugador del equipo
+  private getWinnerTeamIdForDB(teamNumber: number): string | undefined {
+    const player = this.players.find(p => p.team_number === teamNumber);
+    return player?.id; // room_players.id (UUID)
+  }
+
+  // Podio y resultados (DEBEN estar dentro de la clase)
+  showPodium = false;
+  podiumResults: { teamNumber: number, wins: number, color: string }[] = [];
+  winningTeamNumber: number | null = null;
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private alertCtrl: AlertController
   ) {
     addIcons({ 
       arrowBack, trophy, people, play, pause, stop, time, timeOutline, 
@@ -156,10 +173,18 @@ export class GamePlayPage implements OnInit, OnDestroy {
       console.log('📊 Número de pruebas cargadas:', challenges.length);
       
       this.challenges = challenges;
-      
-      // Log adicional para verificar el estado del array
-      console.log('✅ Pruebas asignadas al componente:', this.challenges);
-      
+  
+      // Si la sala es nueva (waiting), ignoramos estado de servidor y arrancamos desde cero
+      if (this.room?.status === 'waiting') {
+        this.completedChallenges = [];
+        this.localWinners = {};
+        this.challenges = this.challenges.map(c => ({
+          ...c,
+          status: 'pending',
+          winner_team_id: null
+        }));
+      }
+  
       // Seleccionar la primera prueba como actual si está desbloqueada
       if (this.challenges.length > 0 && this.isChallengeUnlocked(0)) {
         this.currentChallenge = this.challenges[0];
@@ -220,114 +245,41 @@ export class GamePlayPage implements OnInit, OnDestroy {
   }
 
   isChallengeCompleted(challengeId: string): boolean {
-    const challenge = this.challenges.find(c => c.id === challengeId);
-    return challenge?.status === 'completed';
-  }
-  
-  async endChallenge() {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-    this.challengeInProgress = false;
-    this.timeLeft = 0;
-    
-    console.log('🏁 Finalizando prueba...');
-  }
-  
-  async selectWinner(teamNumber: number) {
-    if (!this.isHost || !this.currentChallenge) {
-      console.log('❌ No se puede seleccionar ganador: isHost=', this.isHost, 'currentChallenge=', this.currentChallenge);
-      return;
-    }
-    
-    console.log(`🏆 Equipo ${teamNumber} seleccionado como ganador`);
-    console.log('🔍 Challenge actual:', this.currentChallenge);
-    
-    try {
-      console.log('📤 Enviando actualización a Supabase...');
-  
-      // Guardar el id para calcular luego el siguiente índice
-      const prevChallengeId = this.currentChallenge.id;
-  
-      // Actualizar solo el estado (no enviamos winner_team_id por ahora)
-      const updatedChallenge = await this.supabaseService.updateChallengeStatus(
-        this.currentChallenge.id, 
-        'completed'
-      );
-      
-      console.log('✅ Respuesta de Supabase:', updatedChallenge);
-      
-      // Recargar las pruebas desde la base de datos para obtener el estado actualizado
-      const roomId = this.route.snapshot.paramMap.get('roomId');
-      if (roomId) {
-        console.log('🔄 Recargando pruebas desde la base de datos...');
-        await this.loadChallenges(roomId);
-      }
-      
-      // Marcar la prueba como completada localmente también (para el contador)
-      if (this.currentChallenge && !this.completedChallenges.includes(this.currentChallenge.id)) {
-        this.completedChallenges.push(this.currentChallenge.id);
-        console.log('📝 Prueba agregada a completedChallenges:', this.completedChallenges);
-      }
-      
-      // Finalizar la prueba actual
-      await this.endChallenge();
-  
-      // Auto-avanzar a la siguiente prueba desbloqueada
-      const prevIndex = this.challenges.findIndex(c => c.id === prevChallengeId);
-      const nextIndex = prevIndex + 1;
-      if (nextIndex < this.challenges.length && this.isChallengeUnlocked(nextIndex)) {
-        this.currentChallenge = this.challenges[nextIndex];
-        console.log('➡️ Avanzando a la siguiente prueba:', this.currentChallenge);
-      } else {
-        console.log('ℹ️ No hay siguiente prueba desbloqueada aún o ya es la última.');
-      }
-      
-      console.log('✅ Prueba completada y actualizada en la base de datos');
-    } catch (error) {
-      console.error('❌ Error completo al actualizar la prueba:', error);
-      
-    }
-  }
-
-  isNextAvailable(index: number): boolean {
-    // Verificar si esta es la siguiente prueba disponible
-    if (index === 0 && !this.isChallengeCompleted(this.challenges[0]?.id)) {
-      return true;
-    }
-    
-    if (index > 0) {
-      const previousCompleted = this.isChallengeCompleted(this.challenges[index - 1]?.id);
-      const currentCompleted = this.isChallengeCompleted(this.challenges[index]?.id);
-      return previousCompleted && !currentCompleted;
-    }
-    
-    return false;
+    // Solo estado local para evitar heredar estados de otras sesiones
+    if (!challengeId) return false;
+    return this.completedChallenges.includes(challengeId);
   }
 
   getCompletedChallengesCount(): number {
+    // Solo contamos las completadas localmente en esta sesión/sala
     return this.completedChallenges.length;
   }
 
-  selectChallenge(challenge: Challenge, index: number) {
-    // Solo permitir seleccionar pruebas desbloqueadas
-    if (this.isChallengeUnlocked(index)) {
-      this.currentChallenge = challenge;
-      
-      // Si es el anfitrión, puede iniciar la prueba directamente
-      if (this.isHost) {
-        console.log(`Prueba seleccionada: ${challenge.title}`);
-      }
-    }
+  isNextAvailable(index: number): boolean {
+    if (!this.challenges || !this.challenges[index]) return false;
+    const challenge = this.challenges[index];
+    // Es la siguiente disponible si está desbloqueada, no está completada
+    // y (si no es la primera) la anterior ya está completada
+    const unlocked = this.isChallengeUnlocked(index);
+    const notCompleted = !this.isChallengeCompleted(challenge.id);
+    const previousCompleted = index === 0 ? true : this.isChallengeCompleted(this.challenges[index - 1]?.id);
+    return unlocked && notCompleted && previousCompleted;
   }
 
-  // Funciones para el modal de instrucciones
-  openChallengeInstructions(challenge: Challenge, event: Event) {
-    event.stopPropagation();
+  selectChallenge(challenge: Challenge, index: number) {
+    if (!this.isChallengeUnlocked(index)) {
+      console.log('🔒 Prueba bloqueada, no se puede seleccionar');
+      return;
+    }
+    this.currentChallenge = challenge;
+    console.log('🎯 Prueba seleccionada:', this.currentChallenge);
+  }
+
+  openChallengeInstructions(challenge: Challenge, event?: Event) {
+    event?.stopPropagation?.();
     this.selectedChallenge = challenge;
-    this.generateInstructionSteps(challenge);
     this.currentInstructionStep = 0;
+    this.generateInstructionSteps(challenge);
     this.showInstructionsModal = true;
   }
 
@@ -336,46 +288,6 @@ export class GamePlayPage implements OnInit, OnDestroy {
     this.selectedChallenge = null;
     this.instructionSteps = [];
     this.currentInstructionStep = 0;
-  }
-
-  generateInstructionSteps(challenge: Challenge) {
-    // Generar pasos de instrucciones basados en la prueba
-    this.instructionSteps = [
-      {
-        title: '¡Bienvenidos a la prueba!',
-        description: `Están a punto de comenzar: ${challenge.title}. Asegúrense de que todos los equipos estén listos.`,
-        icon: 'trophy'
-      },
-      {
-        title: 'Objetivo de la prueba',
-        description: challenge.description || 'Esta es una prueba emocionante que pondrá a prueba las habilidades de los equipos.',
-        icon: 'target'
-      },
-      {
-        title: 'Duración',
-        description: `Tendrán ${this.formatDuration(challenge.duration)} para completar esta prueba. ¡Administren bien su tiempo!`,
-        icon: 'time'
-      },
-      {
-        title: 'Dificultad',
-        description: `Nivel de dificultad: ${this.getDifficultyText(challenge.difficulty)}. ${this.getDifficultyDescription(challenge.difficulty)}`,
-        icon: 'star'
-      },
-      {
-        title: '¡Listos para empezar!',
-        description: 'Una vez que presionen "Empezar", comenzará el cronómetro. ¡Que gane el mejor equipo!',
-        icon: 'play-circle'
-      }
-    ];
-  }
-
-  getDifficultyDescription(difficulty: 'easy' | 'medium' | 'hard' | null): string {
-    switch (difficulty) {
-      case 'easy': return 'Una prueba relajada para calentar motores.';
-      case 'medium': return 'Requiere concentración y trabajo en equipo.';
-      case 'hard': return '¡Prepárense para un desafío intenso!';
-      default: return 'Una prueba equilibrada para todos.';
-    }
   }
 
   nextInstruction() {
@@ -392,64 +304,54 @@ export class GamePlayPage implements OnInit, OnDestroy {
 
   startChallengeFromModal() {
     this.closeInstructionsModal();
-    if (this.selectedChallenge) {
-      this.currentChallenge = this.selectedChallenge;
-      this.startChallenge();
-    }
+    this.startChallenge();
   }
 
-  startChallenge() {
-    if (!this.currentChallenge || !this.isHost) return;
-    
-    this.challengeInProgress = true;
-    this.timeLeft = this.currentChallenge.duration || 120;
-    
-    // Iniciar temporizador
-    this.timer = setInterval(() => {
-      this.timeLeft--;
-      if (this.timeLeft <= 0) {
-        this.endChallenge();
+  generateInstructionSteps(challenge: Challenge) {
+    const durationText = this.formatDuration(challenge.duration || 120);
+    const difficultyText = this.getDifficultyText(challenge.difficulty || 'medium');
+    this.instructionSteps = [
+      {
+        title: `Bienvenidos a "${challenge.title}"`,
+        description: challenge.description || 'Prepárate para la siguiente prueba.',
+        icon: 'information-circle'
+      },
+      {
+        title: 'Objetivo',
+        description: 'Compite para conseguir la mayor puntuación y ganar la ronda.',
+        icon: 'trophy'
+      },
+      {
+        title: 'Duración',
+        description: `Esta prueba dura ${durationText}. ¡Aprovecha bien el tiempo!`,
+        icon: 'time-outline'
+      },
+      {
+        title: 'Dificultad',
+        description: `Nivel de dificultad: ${difficultyText}.`,
+        icon: 'star'
+      },
+      {
+        title: 'Listos',
+        description: 'Cuando estéis listos, empezad la prueba.',
+        icon: 'play'
       }
-    }, 1000);
+    ];
   }
-
-  pauseChallenge() {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-    this.challengeInProgress = false;
-  }
-
-  formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  formatDuration(seconds: number | null): string {
-    if (!seconds) return '2:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  getDifficultyText(difficulty: 'easy' | 'medium' | 'hard' | null): string {
-    switch (difficulty) {
-      case 'easy': return 'Fácil';
-      case 'medium': return 'Medio';
-      case 'hard': return 'Difícil';
-      default: return 'Medio';
-    }
-  }
+  // === FIN DE AÑADIDOS PARA ARREGLAR LOS ERRORES DEL TEMPLATE ===
 
   async endGame() {
     if (this.timer) {
       clearInterval(this.timer);
+      this.timer = null;
     }
-    
+    // Muestra el podio con el estado actual
+    this.computePodium();
+    this.showPodium = true;
+
     console.log('Juego terminado');
-    this.router.navigate(['/game']);
+    // No navegamos aquí para permitir ver el podio; se navega en closePodium()
+    // this.router.navigate(['/game']);
   }
 
   goBack() {
@@ -487,4 +389,234 @@ export class GamePlayPage implements OnInit, OnDestroy {
     }
   }
   
-  } // <- Este es el cierre de la clase GamePlayPage
+   // <- Este es el cierre de la clase GamePlayPage
+  /*
+  // Podio y resultados
+  showPodium = false;
+  podiumResults: { teamNumber: number, wins: number, color: string }[] = [];
+  winningTeamNumber: number | null = null;*/
+
+  // Comprueba si todas las pruebas están completadas y, si es así, prepara y muestra el podio
+  private updatePodiumIfFinished() {
+    if (this.challenges.length > 0 && this.getCompletedChallengesCount() === this.challenges.length) {
+      this.computePodium();
+      this.showPodium = true;
+    }
+  }
+
+  // Calcula victorias por equipo a partir de winner_team_id (room_players.id -> team_number)
+  private computePodium() {
+    const winsByTeam: Record<number, number> = {};
+    const playersById = new Map(this.players.map(p => [p.id, p] as const));
+    const teamNumbers = this.getTeamNumbers();
+  
+    // Inicializamos a 0
+    teamNumbers.forEach(t => winsByTeam[t] = 0);
+  
+    // Sumamos victorias: primero locales; si no hay local, usamos DB
+    this.challenges
+      .filter(c => this.isChallengeCompleted(c.id)) // solo las completadas localmente
+      .forEach(c => {
+        let teamNum: number | undefined;
+  
+        if (this.localWinners[c.id] !== undefined) {
+          teamNum = this.localWinners[c.id];
+        } else if (c.winner_team_id) {
+          const winnerPlayer = playersById.get(c.winner_team_id);
+          teamNum = winnerPlayer?.team_number;
+        }
+  
+        if (teamNum) {
+          winsByTeam[teamNum] = (winsByTeam[teamNum] || 0) + 1;
+        }
+      });
+  
+    const sorted = Object.entries(winsByTeam)
+      .map(([teamNumber, wins]) => ({
+        teamNumber: Number(teamNumber),
+        wins: Number(wins),
+        color: this.getTeamPlayers(Number(teamNumber))[0]?.team_color
+          || this.teamColors[(Number(teamNumber) - 1) % this.teamColors.length]
+      }))
+      .sort((a, b) => b.wins - a.wins);
+  
+    this.podiumResults = sorted.slice(0, 3);
+    this.winningTeamNumber = sorted[0]?.teamNumber ?? null;
+  }
+
+  closePodium() {
+    this.showPodium = false;
+    this.router.navigate(['/game']);
+  }
+
+
+  async selectWinner(teamNumber: number) {
+    const winnerTeamId = this.getWinnerTeamIdForDB(teamNumber);
+    const prevChallengeId = this.currentChallenge?.id;
+    if (!prevChallengeId) {
+      // No hay challenge actual; salir sin modificar estado
+      return;
+    }
+    try {
+      // Registrar localmente
+      if (!this.completedChallenges.includes(prevChallengeId)) {
+        this.completedChallenges.push(prevChallengeId);
+      }
+      const idx = this.challenges.findIndex(c => c.id === prevChallengeId);
+      if (idx >= 0) {
+        this.challenges[idx] = { 
+          ...this.challenges[idx], 
+          status: 'completed',
+          // ponemos también el ganador localmente para el podio
+          winner_team_id: winnerTeamId ?? null 
+        };
+      }
+      // ganadores locales por challenge
+      this.localWinners[prevChallengeId] = teamNumber;
+
+      await this.endChallenge();
+    } catch (error: any) {
+      // Degradación
+      // Registrar localmente también en degradación
+      if (!this.completedChallenges.includes(prevChallengeId)) {
+        this.completedChallenges.push(prevChallengeId);
+      }
+      const idx = this.challenges.findIndex(c => c.id === prevChallengeId);
+      if (idx >= 0) {
+        this.challenges[idx] = { 
+          ...this.challenges[idx], 
+          status: 'completed',
+          winner_team_id: winnerTeamId ?? null
+        };
+      }
+      this.localWinners[prevChallengeId] = teamNumber;
+
+      await this.endChallenge();
+    } finally {
+      this.updatePodiumIfFinished();
+      this.updatingWinner = false;
+    }
+  }
+
+  startChallenge() {
+    if (!this.isHost || !this.currentChallenge || this.challengeInProgress) {
+      return;
+    }
+
+    // Resetear cualquier timer previo
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+
+    // Duración por defecto: 120s
+    this.timeLeft = this.currentChallenge.duration ?? 120;
+    this.challengeInProgress = true;
+
+    // Arrancar temporizador
+    this.timer = setInterval(() => {
+      if (this.timeLeft > 0) {
+        this.timeLeft--;
+      } else {
+        // Auto-finalizar cuando llegue a 0
+        clearInterval(this.timer);
+        this.timer = null;
+        this.finishChallengeFlow();
+      }
+    }, 1000);
+  }
+
+  pauseChallenge() {
+    if (!this.challengeInProgress) return;
+
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    this.challengeInProgress = false;
+  }
+
+  async finishChallengeFlow() {
+    if (!this.currentChallenge) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Finalizar prueba',
+      message: '¿Quieres finalizar la prueba actual?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Finalizar',
+          role: 'confirm',
+          handler: () => {
+            // No await dentro del handler
+            this.endChallenge();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async endChallenge() {
+    // Parar temporizador
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+
+    this.challengeInProgress = false;
+    this.timeLeft = 0;
+
+    const prevChallengeId = this.currentChallenge?.id;
+
+    // Marcar como completada localmente
+    if (prevChallengeId && !this.completedChallenges.includes(prevChallengeId)) {
+      this.completedChallenges.push(prevChallengeId);
+    }
+
+    // Actualizar estado en el array local de challenges
+    if (prevChallengeId) {
+      const idx = this.challenges.findIndex(c => c.id === prevChallengeId);
+      if (idx >= 0) {
+        this.challenges[idx] = {
+          ...this.challenges[idx],
+          status: 'completed'
+        };
+      }
+    }
+
+    // Seleccionar siguiente prueba si está desbloqueada
+    if (this.currentChallenge) {
+      const i = this.challenges.findIndex(c => c.id === this.currentChallenge!.id);
+      const nextIndex = i + 1;
+      if (nextIndex < this.challenges.length && this.isChallengeUnlocked(nextIndex)) {
+        this.currentChallenge = this.challenges[nextIndex];
+      }
+    }
+  }
+
+  formatTime(totalSeconds: number): string {
+    if (totalSeconds == null || totalSeconds < 0) totalSeconds = 0;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  formatDuration(duration?: number | null): string {
+    const seconds = duration ?? 120; // Por defecto 2 minutos
+    return this.formatTime(seconds);
+  }
+
+  getDifficultyText(difficulty?: 'easy' | 'medium' | 'hard' | null): string {
+    switch (difficulty) {
+      case 'easy':
+        return 'Fácil';
+      case 'hard':
+        return 'Difícil';
+      case 'medium':
+      default:
+        return 'Medio';
+    }
+  }
+}

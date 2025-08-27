@@ -28,11 +28,13 @@
 
     <!-- Controles del anfitrión -->
     <div class="host-controls" *ngIf="isHost">
+      <!-- Dentro de .host-controls -->
       <div class="control-buttons">
         <ion-button 
           size="small" 
           color="success"
-          (click)="startChallenge()"
+          (click)="startChallenge()
+      "
           [disabled]="!currentChallenge || challengeInProgress">
           <ion-icon name="play" slot="start"></ion-icon>
           INICIAR
@@ -50,7 +52,7 @@
         <ion-button 
           size="small" 
           color="danger"
-          (click)="endChallenge()"
+          (click)="finishChallengeFlow()"
           [disabled]="!challengeInProgress">
           <ion-icon name="stop" slot="start"></ion-icon>
           FINALIZAR
@@ -240,3 +242,37 @@
     </ng-template>
   </ion-modal>
 </ion-content>
+
+<!-- ... existing code ... -->
+<div class="podium-overlay" *ngIf="showPodium">
+  <div class="podium-modal">
+    <h2 class="podium-title">Ganador de las Alcoholimpiadas</h2>
+    <div class="podium">
+      <div class="place silver" *ngIf="podiumResults[1]">
+        <div class="block" [style.background]="podiumResults[1].color">
+          <span class="place-label">2º</span>
+        </div>
+        <div class="team-label">Equipo {{ podiumResults[1].teamNumber }}</div>
+        <div class="wins">{{ podiumResults[1].wins }} victorias</div>
+      </div>
+
+      <div class="place gold" *ngIf="podiumResults[0]">
+        <div class="block" [style.background]="podiumResults[0].color">
+          <span class="place-label">1º</span>
+        </div>
+        <div class="team-label">Equipo {{ podiumResults[0].teamNumber }}</div>
+        <div class="wins">{{ podiumResults[0].wins }} victorias</div>
+      </div>
+
+      <div class="place bronze" *ngIf="podiumResults[2]">
+        <div class="block" [style.background]="podiumResults[2].color">
+          <span class="place-label">3º</span>
+        </div>
+        <div class="team-label">Equipo {{ podiumResults[2].teamNumber }}</div>
+        <div class="wins">{{ podiumResults[2].wins }} victorias</div>
+      </div>
+    </div>
+
+    <ion-button expand="block" (click)="closePodium()">Volver al inicio</ion-button>
+  </div>
+</div>
